@@ -56,18 +56,27 @@ interface Exchange {
   created_at: string;
 }
 
+interface SearchHistory {
+  id: number;
+  user_id: number;
+  keyword: string;
+  created_at: string;
+}
+
 interface Data {
   users: User[];
   books: Book[];
   driftRecords: DriftRecord[];
   exchanges: Exchange[];
+  searchHistories: SearchHistory[];
 }
 
 const defaultData: Data = {
   users: [],
   books: [],
   driftRecords: [],
-  exchanges: []
+  exchanges: [],
+  searchHistories: []
 };
 
 const file = path.join(dataDir, 'db.json');

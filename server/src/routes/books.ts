@@ -1,11 +1,23 @@
 import { Router } from 'express';
 import db from '../database';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { fuzzyMatch, getMatchScore } from '../utils/searchUtils';
 
 const router = Router();
 
 router.get('/', async (req, res) => {
-  const { category, search, owner_id } = req.query;
+  const { 
+    category, 
+    search, 
+    owner_id,
+    condition,
+    min_points,
+    max_points,
+    start_date,
+    end_date,
+    sort_by,
+    sort_order
+  } = req.query;
   
   await db.read();
   
@@ -16,15 +28,56 @@ router.get('/', async (req, res) => {
   }
 
   if (search) {
-    const searchLower = (search as string).toLowerCase();
+    const searchStr = search as string;
     books = books.filter(b => 
-      b.title.toLowerCase().includes(searchLower) || 
-      b.author.toLowerCase().includes(searchLower)
-    );
+      fuzzyMatch(b.title, searchStr) || 
+      fuzzyMatch(b.author, searchStr)
+    ).map(b => ({
+      ...b,
+      search_score: Math.max(
+        getMatchScore(b.title, searchStr),
+        getMatchScore(b.author, searchStr)
+      )
+    }));
   }
 
   if (owner_id) {
     books = books.filter(b => b.owner_id === parseInt(owner_id as string));
+  }
+
+  if (condition) {
+    books = books.filter(b => b.condition === condition);
+  }
+
+  if (min_points) {
+    books = books.filter(b => b.points_required >= parseInt(min_points as string));
+  }
+
+  if (max_points) {
+    books = books.filter(b => b.points_required <= parseInt(max_points as string));
+  }
+
+  if (start_date) {
+    books = books.filter(b => new Date(b.created_at) >= new Date(start_date as string));
+  }
+
+  if (end_date) {
+    books = books.filter(b => new Date(b.created_at) <= new Date(end_date as string));
+  }
+
+  const sortField = sort_by as string;
+  const sortDir = (sort_order as string) === 'asc' ? 1 : -1;
+
+  if (sortField === 'points') {
+    books.sort((a, b) => (a.points_required - b.points_required) * sortDir);
+  } else if (sortField === 'date') {
+    books.sort((a, b) => (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * sortDir);
+  } else if (sortField === 'title') {
+    books.sort((a, b) => a.title.localeCompare(b.title) * sortDir);
+  } else if (sortField === 'relevance' && search) {
+    books.sort((a: any, b: any) => (b.search_score - a.search_score));
+  } else {
+    books.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
   const booksWithHolder = books.map(book => {
@@ -34,7 +87,7 @@ router.get('/', async (req, res) => {
       holder_name: holder?.username,
       holder_avatar: holder?.avatar
     };
-  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  });
 
   res.json(booksWithHolder);
 });
@@ -158,6 +211,102 @@ router.post('/:id/drift-records', authMiddleware, async (req: AuthRequest, res) 
   await db.write();
 
   res.status(201).json(newRecord);
+});
+
+router.get('/search-history', authMiddleware, async (req: AuthRequest, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  await db.read();
+  const histories = db.data.searchHistories
+    .filter(h => h.user_id === req.user!.id)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 20);
+
+  res.json(histories);
+});
+
+router.post('/search-history', authMiddleware, async (req: AuthRequest, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  const { keyword } = req.body;
+
+  if (!keyword || keyword.trim() === '') {
+    return res.status(400).json({ error: 'Keyword is required' });
+  }
+
+  await db.read();
+
+  const existingIndex = db.data.searchHistories.findIndex(
+    h => h.user_id === req.user!.id && h.keyword.toLowerCase() === keyword.toLowerCase()
+  );
+
+  if (existingIndex !== -1) {
+    db.data.searchHistories.splice(existingIndex, 1);
+  }
+
+  const newId = Math.max(0, ...db.data.searchHistories.map(h => h.id)) + 1;
+
+  const newHistory = {
+    id: newId,
+    user_id: req.user.id,
+    keyword: keyword.trim(),
+    created_at: new Date().toISOString()
+  };
+
+  db.data.searchHistories.push(newHistory);
+
+  const userHistories = db.data.searchHistories.filter(h => h.user_id === req.user!.id);
+  if (userHistories.length > 50) {
+    const sorted = userHistories.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    const toRemove = sorted.slice(50);
+    db.data.searchHistories = db.data.searchHistories.filter(
+      h => !toRemove.some(r => r.id === h.id)
+    );
+  }
+
+  await db.write();
+
+  res.status(201).json(newHistory);
+});
+
+router.delete('/search-history/:id', authMiddleware, async (req: AuthRequest, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  const { id } = req.params;
+
+  await db.read();
+  const historyIndex = db.data.searchHistories.findIndex(
+    h => h.id === parseInt(id) && h.user_id === req.user!.id
+  );
+
+  if (historyIndex === -1) {
+    return res.status(404).json({ error: 'Search history not found' });
+  }
+
+  db.data.searchHistories.splice(historyIndex, 1);
+  await db.write();
+
+  res.json({ message: 'Search history deleted' });
+});
+
+router.delete('/search-history', authMiddleware, async (req: AuthRequest, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  await db.read();
+  db.data.searchHistories = db.data.searchHistories.filter(h => h.user_id !== req.user!.id);
+  await db.write();
+
+  res.json({ message: 'All search history cleared' });
 });
 
 export default router;

@@ -24,14 +24,30 @@ export const authAPI = {
 };
 
 export const booksAPI = {
-  getBooks: (params?: { category?: string; search?: string; owner_id?: number }) =>
-    api.get('/books', { params }),
+  getBooks: (params?: {
+    category?: string;
+    search?: string;
+    owner_id?: number;
+    condition?: string;
+    min_points?: number;
+    max_points?: number;
+    start_date?: string;
+    end_date?: string;
+    sort_by?: string;
+    sort_order?: string;
+  }) => api.get('/books', { params }),
   getBook: (id: number) => api.get(`/books/${id}`),
   createBook: (book: any) => api.post('/books', book),
   getDriftRecords: (bookId: number) => api.get(`/books/${bookId}/drift-records`),
   addDriftRecord: (bookId: number, record: any) =>
     api.post(`/books/${bookId}/drift-records`, record),
   getCategories: () => api.get('/books/categories'),
+  getSearchHistory: () => api.get('/books/search-history'),
+  addSearchHistory: (keyword: string) =>
+    api.post('/books/search-history', { keyword }),
+  deleteSearchHistory: (id: number) =>
+    api.delete(`/books/search-history/${id}`),
+  clearSearchHistory: () => api.delete('/books/search-history'),
 };
 
 export const exchangesAPI = {
