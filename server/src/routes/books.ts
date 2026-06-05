@@ -39,6 +39,11 @@ router.get('/', async (req, res) => {
   res.json(booksWithHolder);
 });
 
+router.get('/categories', (_req, res) => {
+  const categories = ['文学', '科幻', '历史', '哲学', '艺术', '科技', '经济', '心理', '童话', '其他'];
+  res.json(categories);
+});
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -153,11 +158,6 @@ router.post('/:id/drift-records', authMiddleware, async (req: AuthRequest, res) 
   await db.write();
 
   res.status(201).json(newRecord);
-});
-
-router.get('/categories', (_req, res) => {
-  const categories = ['文学', '科幻', '历史', '哲学', '艺术', '科技', '经济', '心理', '童话', '其他'];
-  res.json(categories);
 });
 
 export default router;
