@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookPlus, Upload } from 'lucide-react';
-import { booksAPI } from '../services/api';
+import { BookPlus, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { booksAPI, uploadAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const AddBook = () => {
@@ -19,7 +19,10 @@ const AddBook = () => {
     points_required: 10
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const conditions = ['全新', '九成新', '八成新', '七成新', '六成新及以下'];
 
@@ -58,6 +61,37 @@ const AddBook = () => {
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type.startsWith('image/')) {
+      handleUploadImage(file);
+    } else {
+      setError('请选择图片文件');
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadImage = async (file: File) => {
+    setUploading(true);
+    setError('');
+    try {
+      const res = await uploadAPI.uploadImage(file);
+      setFormData((prev) => ({ ...prev, cover: res.data.url }));
+    } catch (err: any) {
+      setError(err.response?.data?.error || '图片上传失败，请重试');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setFormData((prev) => ({ ...prev, cover: '' }));
   };
 
   return (
@@ -157,23 +191,64 @@ const AddBook = () => {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">封面图片链接</label>
-              <div className="flex space-x-3">
-                <input
-                  type="url"
-                  value={formData.cover}
-                  onChange={(e) => handleChange('cover', e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
-                  placeholder="https://..."
-                />
-                <button
-                  type="button"
-                  className="px-4 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors flex items-center space-x-2"
-                >
-                  <Upload className="w-5 h-5" />
-                  <span>上传</span>
-                </button>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">封面图片</label>
+              
+              {formData.cover ? (
+                <div className="relative inline-block">
+                  <img
+                    src={formData.cover}
+                    alt="封面预览"
+                    className="w-32 h-48 object-cover rounded-lg shadow-md"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveCover}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-2 px-4 py-3 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-5 h-5" />
+                    <span>{uploading ? '上传中...' : '上传封面'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="px-4 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <ImageIcon className="w-5 h-5 inline mr-1" />
+                    <span>使用图片链接</span>
+                  </button>
+                </div>
+              )}
+
+              {showUrlInput && !formData.cover && (
+                <div className="mt-3">
+                  <input
+                    type="url"
+                    value={formData.cover}
+                    onChange={(e) => handleChange('cover', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
+                    placeholder="https://..."
+                  />
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
             </div>
 
             <div className="md:col-span-2">

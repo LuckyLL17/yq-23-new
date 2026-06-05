@@ -10,6 +10,7 @@ import authRoutes from './routes/auth';
 import bookRoutes from './routes/books';
 import exchangeRoutes from './routes/exchanges';
 import topicRoutes from './routes/topics';
+import uploadRoutes from './routes/upload';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -27,10 +28,13 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/exchanges', exchangeRoutes);
 app.use('/api/topics', topicRoutes);
+app.use('/api/upload', uploadRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Book Exchange API is running' });

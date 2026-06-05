@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Image, X, Send, Eye, Edit3, Hash } from 'lucide-react';
+import { ArrowLeft, Image, X, Send, Eye, Edit3, Hash, Upload } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { topicsAPI } from '../services/api';
+import { topicsAPI, uploadAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const CreatePost = () => {
@@ -18,6 +18,9 @@ const CreatePost = () => {
   const [previewMode, setPreviewMode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadMode, setUploadMode] = useState<'content' | 'cover'>('content');
 
   useEffect(() => {
     if (!user) {
@@ -62,6 +65,50 @@ const CreatePost = () => {
     setContent(prev => prev + (prev ? '\n\n' : '') + imgMarkdown);
     setImageUrl('');
     setShowImageInput(false);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) {
+      setError('请选择图片文件');
+      return;
+    }
+
+    handleUploadImages(imageFiles);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadImages = async (files: File[]) => {
+    setUploading(true);
+    setError('');
+    try {
+      const res = await uploadAPI.uploadImages(files);
+      const uploadedUrls = res.data.urls;
+
+      if (uploadMode === 'cover') {
+        setImages(prev => [...prev, ...uploadedUrls]);
+      } else {
+        const newContent = uploadedUrls
+          .map((url: string) => `![图片](${url})`)
+          .join('\n\n');
+        setContent(prev => prev + (prev ? '\n\n' : '') + newContent);
+      }
+      setShowImageInput(false);
+    } catch (err: any) {
+      setError(err.response?.data?.error || '图片上传失败，请重试');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const openUploadDialog = (mode: 'content' | 'cover') => {
+    setUploadMode(mode);
+    fileInputRef.current?.click();
   };
 
   const handleSubmit = async () => {
@@ -207,28 +254,51 @@ const CreatePost = () => {
             </div>
 
             {showImageInput && (
-              <div className="mb-3 p-3 bg-gray-50 rounded-xl flex gap-2">
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="请输入图片URL"
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={insertImageToContent}
-                  className="px-4 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600 transition-colors"
-                >
-                  插入内容
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAddImage}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  添加为封面
-                </button>
+              <div className="mb-3 p-3 bg-gray-50 rounded-xl space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openUploadDialog('content')}
+                    disabled={uploading}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-500 text-white text-sm rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>{uploading ? '上传中...' : '上传图片并插入内容'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openUploadDialog('cover')}
+                    disabled={uploading}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>上传为封面</span>
+                  </button>
+                </div>
+                <div className="text-center text-xs text-gray-400">或使用图片链接</div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="请输入图片URL"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={insertImageToContent}
+                    className="px-4 py-2 bg-primary-100 text-primary-600 text-sm rounded-lg hover:bg-primary-200 transition-colors"
+                  >
+                    插入内容
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddImage}
+                    className="px-4 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    添加为封面
+                  </button>
+                </div>
               </div>
             )}
 
@@ -304,6 +374,15 @@ const CreatePost = () => {
           </div>
         </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleFileSelect}
+        className="hidden"
+      />
     </div>
   );
 };
