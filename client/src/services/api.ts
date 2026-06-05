@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -56,6 +56,37 @@ export const exchangesAPI = {
     api.post('/exchanges', { book_id: bookId, message }),
   acceptExchange: (id: number) => api.post(`/exchanges/${id}/accept`),
   rejectExchange: (id: number) => api.post(`/exchanges/${id}/reject`),
+};
+
+export const topicsAPI = {
+  getTopics: () => api.get('/topics'),
+  getTopic: (id: number) => api.get(`/topics/${id}`),
+  getPosts: (params?: {
+    topic_id?: number;
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    limit?: number;
+  }) => api.get('/topics/posts', { params }),
+  getPost: (id: number) => api.get(`/topics/posts/${id}`),
+  createPost: (post: {
+    title: string;
+    content: string;
+    topic_ids?: number[];
+    images?: string[];
+  }) => api.post('/topics/posts', post),
+  getPostLikeStatus: (id: number) => api.get(`/topics/posts/${id}/like-status`),
+  likePost: (id: number) => api.post(`/topics/posts/${id}/like`),
+  unlikePost: (id: number) => api.post(`/topics/posts/${id}/unlike`),
+  getComments: (postId: number) => api.get(`/topics/posts/${postId}/comments`),
+  addComment: (postId: number, comment: {
+    content: string;
+    parent_id?: number | null;
+    reply_to_user_id?: number;
+  }) => api.post(`/topics/posts/${postId}/comments`, comment),
+  likeComment: (id: number) => api.post(`/topics/comments/${id}/like`),
+  unlikeComment: (id: number) => api.post(`/topics/comments/${id}/unlike`),
 };
 
 export default api;

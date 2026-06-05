@@ -138,5 +138,397 @@
       "created_at": "2026-06-05T08:18:23.180Z"
     }
   ],
-  "exchanges": []
+  "exchanges": [],
+  "searchHistories": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "keyword": "11",
+      "created_at": "2026-06-05T14:26:08.463Z"
+    }
+  ],
+  "topics": [
+    {
+      "id": 1,
+      "name": "读书分享",
+      "description": "分享你的读书心得和感悟",
+      "icon": "📚",
+      "post_count": 3,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 2,
+      "name": "书评推荐",
+      "description": "好书推荐和深度书评",
+      "icon": "⭐",
+      "post_count": 2,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 3,
+      "name": "二手书交流",
+      "description": "二手书交换、买卖信息",
+      "icon": "🔄",
+      "post_count": 1,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 4,
+      "name": "读书打卡",
+      "description": "每日读书打卡，记录成长",
+      "icon": "📅",
+      "post_count": 1,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 5,
+      "name": "文学讨论",
+      "description": "讨论文学作品与作家",
+      "icon": "✍️",
+      "post_count": 0,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    }
+  ],
+  "posts": [
+    {
+      "id": 1,
+      "title": "《百年孤独》读后感：孤独是生命的底色",
+      "content": "# 《百年孤独》读后感\n\n马尔克斯用他魔幻现实主义的笔触，为我们描绘了布恩迪亚家族七代人的传奇故事。\n\n## 关于孤独\n\n书中每个人物都在以不同的方式与孤独对抗：\n- 乌尔苏拉的孤独是坚守与等待\n- 奥雷里亚诺的孤独是战争与虚无\n- 阿玛兰妲的孤独是爱与悔恨\n\n> 生命中曾经有过的所有灿烂，终究都需要用寂寞来偿还。\n\n## 个人感悟\n\n读完这本书，我最大的感受是：孤独并不可怕，它是生命的一部分。我们能做的，是在孤独中寻找意义，在虚无中创造价值。\n\n你们觉得这本书最打动你的是什么？欢迎讨论～",
+      "author_id": 1,
+      "topic_ids": [
+        1,
+        2
+      ],
+      "images": [
+        "https://picsum.photos/seed/post1/800/400"
+      ],
+      "view_count": 139,
+      "like_count": 15,
+      "comment_count": 4,
+      "created_at": "2026-06-03T08:18:23.180Z",
+      "updated_at": "2026-06-03T08:18:23.180Z"
+    },
+    {
+      "id": 2,
+      "title": "最近在读《三体》，科幻迷们来聊聊",
+      "content": "## 三体世界的设定太绝了！\n\n作为一个科幻迷，《三体》真的刷新了我的认知。刘慈欣的想象力简直是宇宙级的。\n\n### 最喜欢的设定\n1. **黑暗森林法则** - 这个设定太震撼了\n2. **降维打击** - 二向箔的描写让人不寒而栗\n3. **智子工程** - 科学与玄幻的完美结合\n\n![科幻](https://picsum.photos/seed/scifi/600/300)\n\n有没有同好一起讨论？你们最喜欢哪一部？",
+      "author_id": 2,
+      "topic_ids": [
+        1,
+        5
+      ],
+      "images": [
+        "https://picsum.photos/seed/scifi/600/300"
+      ],
+      "view_count": 256,
+      "like_count": 32,
+      "comment_count": 5,
+      "created_at": "2026-06-04T08:18:23.180Z",
+      "updated_at": "2026-06-04T08:18:23.180Z"
+    },
+    {
+      "id": 3,
+      "title": "有想换书的朋友吗？我有一批九成新的书",
+      "content": "## 闲置书籍交换\n\n整理书架翻出一批书，九成新，想换一些没看过的书。\n\n### 可交换书籍\n- 《活着》余华\n- 《围城》钱钟书\n- 《平凡的世界》路遥\n- 《小王子》圣埃克苏佩里\n\n### 想换的书\n- 悬疑推理类优先\n- 或者你们有什么好书推荐也可以\n\n有兴趣的朋友可以评论区留言～",
+      "author_id": 3,
+      "topic_ids": [
+        3
+      ],
+      "images": [],
+      "view_count": 89,
+      "like_count": 8,
+      "comment_count": 2,
+      "created_at": "2026-06-05T03:18:23.180Z",
+      "updated_at": "2026-06-05T03:18:23.180Z"
+    },
+    {
+      "id": 4,
+      "title": "读书打卡Day30｜坚持一个月啦！",
+      "content": "# 读书打卡第30天\n\n不知不觉已经坚持读书一个月了！给自己点个赞👍\n\n## 本月书单\n1. 《百年孤独》⭐⭐⭐⭐⭐\n2. 《三体》⭐⭐⭐⭐⭐\n3. 《小王子》⭐⭐⭐⭐\n4. 《活着》⭐⭐⭐⭐⭐\n5. 《人类简史》⭐⭐⭐⭐\n\n## 心得\n每天读书一小时，感觉整个人都沉静下来了。阅读真的是成本最低的自我提升方式。\n\n有没有一起打卡的小伙伴？互相监督呀～",
+      "author_id": 1,
+      "topic_ids": [
+        4
+      ],
+      "images": [],
+      "view_count": 77,
+      "like_count": 13,
+      "comment_count": 3,
+      "created_at": "2026-06-05T06:18:23.180Z",
+      "updated_at": "2026-06-05T06:18:23.180Z"
+    },
+    {
+      "id": 5,
+      "title": "深度书评：为什么《活着》是余华最好的作品",
+      "content": "## 为什么说《活着》是余华的巅峰之作？\n\n余华的作品我读过不少，但《活着》始终是最震撼我的一本。\n\n### 语言的力量\n余华的文字很朴实，没有华丽的辞藻，但就是这种朴实，才让福贵的苦难显得格外真实。\n\n### 生命的韧性\n福贵的一生经历了太多苦难：\n- 家道中落\n- 失去亲人\n- 孤独终老\n\n但他依然活着，这种韧性本身就是对生命最大的礼赞。\n\n> 人是为活着本身而活着的，而不是为了活着之外的任何事物所活着。\n\n你们觉得呢？",
+      "author_id": 3,
+      "topic_ids": [
+        2,
+        5
+      ],
+      "images": [
+        "https://picsum.photos/seed/bookreview/700/350"
+      ],
+      "view_count": 198,
+      "like_count": 28,
+      "comment_count": 4,
+      "created_at": "2026-06-02T08:18:23.180Z",
+      "updated_at": "2026-06-02T08:18:23.180Z"
+    },
+    {
+      "id": 6,
+      "title": "sa的dasd阿斯顿",
+      "content": "## 党纪国法说的话给粉丝都很过分很大方\n### 飞机阿富汗解放后是克己奉公的时光\n粉丝看到了回复健康水淀粉即可上飞机上的话可说的风景画上开发\n\n![图片](https://img0.baidu.com/it/u=3032708709,479037656&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=750)",
+      "author_id": 4,
+      "topic_ids": [],
+      "images": [],
+      "view_count": 2,
+      "like_count": 0,
+      "comment_count": 0,
+      "created_at": "2026-06-05T14:32:07.641Z",
+      "updated_at": "2026-06-05T14:32:07.641Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "post_id": 1,
+      "author_id": 2,
+      "content": "写得太好了！马尔克斯的文字真的有魔力，这本书我也读了三遍，每次都有新的感悟。",
+      "parent_id": null,
+      "like_count": 5,
+      "created_at": "2026-06-04T08:18:23.180Z"
+    },
+    {
+      "id": 2,
+      "post_id": 1,
+      "author_id": 3,
+      "content": "同感，孤独是这本书永恒的主题。不过我觉得乌尔苏拉才是全书最坚强的人。",
+      "parent_id": null,
+      "like_count": 3,
+      "created_at": "2026-06-04T10:18:23.180Z"
+    },
+    {
+      "id": 3,
+      "post_id": 1,
+      "author_id": 1,
+      "content": "没错！乌尔苏拉用她的一生支撑起了整个家族，她的孤独是最隐忍的。",
+      "parent_id": 2,
+      "reply_to_user_id": 3,
+      "like_count": 2,
+      "created_at": "2026-06-04T12:18:23.180Z"
+    },
+    {
+      "id": 4,
+      "post_id": 2,
+      "author_id": 1,
+      "content": "我也喜欢三体！黑暗森林法则真的是天才级的设定，太震撼了。",
+      "parent_id": null,
+      "like_count": 8,
+      "created_at": "2026-06-04T12:18:23.180Z"
+    },
+    {
+      "id": 5,
+      "post_id": 2,
+      "author_id": 3,
+      "content": "第二部《黑暗森林》是巅峰！罗辑的人设太酷了，从浪子到面壁者的转变。",
+      "parent_id": null,
+      "like_count": 12,
+      "created_at": "2026-06-04T14:18:23.180Z"
+    },
+    {
+      "id": 6,
+      "post_id": 2,
+      "author_id": 2,
+      "content": "同意！第二部的思想深度是三部里最强的。不过第三部的降维打击也很绝",
+      "parent_id": 5,
+      "reply_to_user_id": 3,
+      "like_count": 4,
+      "created_at": "2026-06-04T16:18:23.180Z"
+    },
+    {
+      "id": 7,
+      "post_id": 2,
+      "author_id": 1,
+      "content": "我最喜欢第一部，古筝行动那段看的我鸡皮疙瘩都起来了",
+      "parent_id": 5,
+      "reply_to_user_id": 3,
+      "like_count": 3,
+      "created_at": "2026-06-04T18:18:23.180Z"
+    },
+    {
+      "id": 8,
+      "post_id": 3,
+      "author_id": 1,
+      "content": "有兴趣！《活着》和《平凡的世界》我都想看，我有一些东野圭吾的书可以换",
+      "parent_id": null,
+      "like_count": 1,
+      "created_at": "2026-06-05T05:18:23.180Z"
+    },
+    {
+      "id": 9,
+      "post_id": 3,
+      "author_id": 2,
+      "content": "《围城》还有吗？我想用《白夜行》换",
+      "parent_id": null,
+      "like_count": 2,
+      "created_at": "2026-06-05T06:18:23.180Z"
+    },
+    {
+      "id": 10,
+      "post_id": 4,
+      "author_id": 2,
+      "content": "好棒！一起打卡呀～我也在坚持读书",
+      "parent_id": null,
+      "like_count": 4,
+      "created_at": "2026-06-05T07:18:23.180Z"
+    },
+    {
+      "id": 11,
+      "post_id": 5,
+      "author_id": 1,
+      "content": "说得好！余华用最朴素的语言讲了最沉重的故事",
+      "parent_id": null,
+      "like_count": 6,
+      "created_at": "2026-06-03T10:18:23.180Z"
+    },
+    {
+      "id": 12,
+      "post_id": 5,
+      "author_id": 2,
+      "content": "《活着》确实经典，我推荐给好多朋友了，都说好。",
+      "parent_id": null,
+      "like_count": 4,
+      "created_at": "2026-06-03T14:18:23.180Z"
+    },
+    {
+      "id": 13,
+      "post_id": 5,
+      "author_id": 3,
+      "content": "谢谢喜欢～余华的《许三观卖血记》也很推荐",
+      "parent_id": 12,
+      "reply_to_user_id": 2,
+      "like_count": 2,
+      "created_at": "2026-06-04T08:18:23.180Z"
+    },
+    {
+      "id": 14,
+      "post_id": 5,
+      "author_id": 2,
+      "content": "马克了！下次就看这本",
+      "parent_id": 13,
+      "reply_to_user_id": 3,
+      "like_count": 1,
+      "created_at": "2026-06-04T12:18:23.180Z"
+    },
+    {
+      "id": 15,
+      "post_id": 1,
+      "author_id": 1,
+      "content": "这本书真的很赞，我也很喜欢马尔克斯的风格！",
+      "parent_id": null,
+      "like_count": 0,
+      "created_at": "2026-06-05T14:18:20.967Z"
+    },
+    {
+      "id": 16,
+      "post_id": 4,
+      "author_id": 1,
+      "content": "1111",
+      "parent_id": null,
+      "like_count": 0,
+      "created_at": "2026-06-05T14:27:49.265Z"
+    },
+    {
+      "id": 17,
+      "post_id": 4,
+      "author_id": 4,
+      "content": "1111",
+      "parent_id": 16,
+      "reply_to_user_id": 1,
+      "like_count": 0,
+      "created_at": "2026-06-05T14:30:59.522Z"
+    }
+  ],
+  "postLikes": [
+    {
+      "id": 1,
+      "post_id": 1,
+      "user_id": 2,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 2,
+      "post_id": 1,
+      "user_id": 3,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 3,
+      "post_id": 2,
+      "user_id": 1,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 4,
+      "post_id": 2,
+      "user_id": 3,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 5,
+      "post_id": 3,
+      "user_id": 1,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 6,
+      "post_id": 4,
+      "user_id": 2,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 7,
+      "post_id": 5,
+      "user_id": 1,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 8,
+      "post_id": 5,
+      "user_id": 2,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 9,
+      "post_id": 4,
+      "user_id": 1,
+      "created_at": "2026-06-05T14:27:03.270Z"
+    }
+  ],
+  "commentLikes": [
+    {
+      "id": 1,
+      "comment_id": 1,
+      "user_id": 3,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 2,
+      "comment_id": 4,
+      "user_id": 3,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 3,
+      "comment_id": 5,
+      "user_id": 1,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 4,
+      "comment_id": 10,
+      "user_id": 1,
+      "created_at": "2026-06-05T14:28:54.104Z"
+    }
+  ]
 }
