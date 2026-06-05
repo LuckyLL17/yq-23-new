@@ -1,9 +1,9 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Coins, BookOpen, Sparkles, Filter, X, Clock, Trash2, ChevronDown } from 'lucide-react';
+import { Search, Coins, BookOpen, Sparkles, Filter, X, Clock, ChevronDown } from 'lucide-react';
 import { booksAPI } from '../services/api';
 import BookCard from '../components/BookCard';
-import { AuthContext } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const CONDITIONS = ['全新', '九成新', '八成新', '七成新', '六成新及以下'];
 const SORT_OPTIONS = [
@@ -14,7 +14,7 @@ const SORT_OPTIONS = [
 ];
 
 const Home = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [books, setBooks] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');

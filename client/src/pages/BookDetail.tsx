@@ -218,7 +218,7 @@ const BookDetail = () => {
 
         {driftRecords.length > 0 ? (
           <div className="relative drift-timeline pl-12">
-            {driftRecords.map((record, index) => (
+            {driftRecords.map((record) => (
               <div key={record.id} className="relative mb-8 last:mb-0">
                 <div className="absolute left-[-36px] top-2 w-5 h-5 bg-primary-500 rounded-full border-4 border-white shadow"></div>
                 <div className="bg-gray-50 rounded-xl p-5">
