@@ -193,30 +193,42 @@ const PostDetail = () => {
   const [replyTarget, setReplyTarget] = useState<Comment | null>(null);
 
   const postId = parseInt(id || '0');
-  const hasFetched = useRef(false);
+  const hasFetchedRef = useRef(false);
+  const lastPostIdRef = useRef<number | null>(null);
+  const lastUserIdRef = useRef<number | null>(null);
 
   useEffect(() => {
+    const userId = user?.id ?? null;
+    const postIdChanged = lastPostIdRef.current !== postId;
+    const userChanged = lastUserIdRef.current !== userId;
+
+    if (!postIdChanged && !userChanged && hasFetchedRef.current) {
+      return;
+    }
+
+    hasFetchedRef.current = true;
+    lastPostIdRef.current = postId;
+    lastUserIdRef.current = userId;
+
     const fetchData = async () => {
-      if (hasFetched.current) return;
-      hasFetched.current = true;
-      
       setLoading(true);
       try {
-        const [postRes, commentsRes] = await Promise.all([
+        const requests: Promise<any>[] = [
           topicsAPI.getPost(postId),
           topicsAPI.getComments(postId),
-        ]);
+        ];
+
+        if (user) {
+          requests.push(topicsAPI.getPostLikeStatus(postId));
+        }
+
+        const [postRes, commentsRes, likeRes] = await Promise.all(requests);
         setPost(postRes.data);
         setLikeCount(postRes.data.like_count);
         setComments(commentsRes.data);
 
-        if (user) {
-          try {
-            const likeRes = await topicsAPI.getPostLikeStatus(postId);
-            setLiked(likeRes.data.liked);
-          } catch (e) {
-            // ignore
-          }
+        if (likeRes) {
+          setLiked(likeRes.data.liked);
         }
       } catch (error) {
         console.error('Failed to fetch post:', error);
@@ -226,10 +238,6 @@ const PostDetail = () => {
     };
 
     fetchData();
-
-    return () => {
-      hasFetched.current = false;
-    };
   }, [postId, user]);
 
   const handleLike = async () => {
@@ -265,7 +273,7 @@ const PostDetail = () => {
     setSubmitting(true);
     try {
       const res = await topicsAPI.addComment(postId, { content: newComment });
-      setComments(prev => [...prev, { ...res.data, replies: [] ]);
+      setComments(prev => [...prev, { ...res.data, replies: [] }]);
       setNewComment('');
       setPost((prev: any) => ({
         ...prev,
@@ -404,7 +412,14 @@ const PostDetail = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <button
-        onClick={() => navigate('/topics')}
+        onClick={() => navigate('/topics', {
+          state: {
+            fromPostDetail: true,
+            postId,
+            liked,
+            likeCount
+          }
+        })}
         className="flex items-center gap-2 text-gray-600 hover:text-primary-500 mb-6 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -470,3 +485,88 @@ const PostDetail = () => {
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all ${
               liked
                 ? 'bg-red-50 text-red-500'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+            <span className="font-medium">{likeCount}</span>
+          </button>
+          <div className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 text-gray-600 rounded-xl">
+            <MessageSquare className="w-5 h-5" />
+            <span className="font-medium">{post.comment_count}</span>
+          </div>
+        </div>
+      </article>
+
+      <section className="bg-white rounded-2xl p-8 shadow-sm">
+        <h2 className="text-xl font-bold text-book-ink mb-6">
+          评论 ({post.comment_count})
+        </h2>
+
+        {user ? (
+          <div className="flex gap-3 mb-8">
+            <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center shrink-0">
+              <User className="w-6 h-6 text-primary-600" />
+            </div>
+            <div className="flex-1">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="写下你的评论..."
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none transition-all"
+              />
+              <div className="flex justify-end mt-2">
+                <button
+                  onClick={handleSubmitComment}
+                  disabled={submitting || !newComment.trim()}
+                  className="flex items-center gap-2 px-5 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>发布</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 mb-8 bg-gray-50 rounded-xl">
+            <p className="text-gray-500 mb-3">登录后发表评论</p>
+            <Link
+              to="/login"
+              className="text-primary-500 hover:text-primary-600 font-medium"
+            >
+              立即登录
+            </Link>
+          </div>
+        )}
+
+        <div className="divide-y divide-gray-100">
+          {comments.length > 0 ? (
+            comments.map((comment) => (
+              <div key={comment.id} className="py-4 first:pt-0">
+                <CommentItem
+                  comment={comment}
+                  onLike={handleCommentLike}
+                  onReply={handleReply}
+                  replyingTo={replyingTo}
+                  setReplyingTo={setReplyingTo}
+                  replyContent={replyContent}
+                  setReplyContent={setReplyContent}
+                  onSubmitReply={handleSubmitReply}
+                  onCancelReply={cancelReply}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">暂无评论，来抢沙发吧～</p>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default PostDetail;

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MessageSquare, Eye, Heart, User, Clock, Plus, Search, TrendingUp, Hash } from 'lucide-react';
 import { topicsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,6 +34,7 @@ const getExcerpt = (content: string, maxLength: number = 150) => {
 const Topics = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [posts, setPosts] = useState<any[]>([]);
   const [topics, setTopics] = useState<any[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
@@ -80,7 +81,18 @@ const Topics = () => {
       }
     };
     fetchPosts();
-  }, [selectedTopic, searchQuery, sortBy, sortOrder, page]);
+  }, [selectedTopic, searchQuery, sortBy, sortOrder, page, user]);
+
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.fromPostDetail && state?.postId) {
+      setPosts(prev => prev.map(p =>
+        p.id === state.postId
+          ? { ...p, liked: state.liked, like_count: state.likeCount }
+          : p
+      ));
+    }
+  }, [location.state]);
 
   const handleTopicClick = (topicId: number | null) => {
     setSelectedTopic(topicId);
@@ -94,6 +106,43 @@ const Topics = () => {
     }
     navigate('/topics/new');
   };
+
+  const handleLike = useCallback(async (postId: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const postIndex = posts.findIndex(p => p.id === postId);
+    if (postIndex === -1) return;
+
+    const post = posts[postIndex];
+    const newLiked = !post.liked;
+
+    setPosts(prev => prev.map(p =>
+      p.id === postId
+        ? { ...p, liked: newLiked, like_count: newLiked ? p.like_count + 1 : p.like_count - 1 }
+        : p
+    ));
+
+    try {
+      if (newLiked) {
+        await topicsAPI.likePost(postId);
+      } else {
+        await topicsAPI.unlikePost(postId);
+      }
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
+      setPosts(prev => prev.map(p =>
+        p.id === postId
+          ? { ...p, liked: !newLiked, like_count: !newLiked ? p.like_count + 1 : p.like_count - 1 }
+          : p
+      ));
+    }
+  }, [user, navigate, posts]);
 
   return (
     <div className="flex gap-6">
@@ -246,10 +295,15 @@ const Topics = () => {
                       <Eye className="w-4 h-4" />
                       <span>{post.view_count}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-4 h-4" />
+                    <button
+                      onClick={(e) => handleLike(post.id, e)}
+                      className={`flex items-center gap-1 transition-colors ${
+                        post.liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${post.liked ? 'fill-current' : ''}`} />
                       <span>{post.like_count}</span>
-                    </div>
+                    </button>
                     <div className="flex items-center gap-1">
                       <MessageSquare className="w-4 h-4" />
                       <span>{post.comment_count}</span>

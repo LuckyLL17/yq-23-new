@@ -1,21 +1,19 @@
 import { Router } from 'express';
 import db from '../database';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { authMiddleware, optionalAuthMiddleware, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 // 获取所有话题
 router.get('/', async (_req, res) => {
-  await db.read();
   const topics = [...db.data.topics].sort((a, b) => b.post_count - a.post_count);
   res.json(topics);
 });
 
 // 获取帖子列表
-router.get('/posts', async (req, res) => {
+router.get('/posts', optionalAuthMiddleware, async (req: AuthRequest, res) => {
   const { topic_id, search, sort_by = 'created_at', sort_order = 'desc', page = 1, limit = 10 } = req.query;
-
-  await db.read();
+  const userId = req.user?.id;
 
   let posts = [...db.data.posts];
 
@@ -57,6 +55,13 @@ router.get('/posts', async (req, res) => {
   const startIndex = (pageNum - 1) * limitNum;
   const paginatedPosts = posts.slice(startIndex, startIndex + limitNum);
 
+  const likedPostIds = new Set<number>();
+  if (userId) {
+    db.data.postLikes
+      .filter(l => l.user_id === userId)
+      .forEach(l => likedPostIds.add(l.post_id));
+  }
+
   const postsWithAuthor = paginatedPosts.map(post => {
     const author = db.data.users.find(u => u.id === post.author_id);
     const topics = post.topic_ids.map(tid => db.data.topics.find(t => t.id === tid)).filter(Boolean);
@@ -64,7 +69,8 @@ router.get('/posts', async (req, res) => {
       ...post,
       author_name: author?.username,
       author_avatar: author?.avatar,
-      topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon }))
+      topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon })),
+      liked: likedPostIds.has(post.id)
     };
   });
 
@@ -139,7 +145,6 @@ router.get('/posts/:id', async (req, res) => {
   const { id } = req.params;
   const postId = parseInt(id);
 
-  await db.read();
   const post = db.data.posts.find(p => p.id === postId);
 
   if (!post) {
@@ -170,7 +175,6 @@ router.get('/posts/:id/like-status', authMiddleware, async (req: AuthRequest, re
   const { id } = req.params;
   const postId = parseInt(id);
 
-  await db.read();
   const liked = db.data.postLikes.some(
     l => l.post_id === postId && l.user_id === req.user!.id
   );
@@ -248,15 +252,21 @@ router.post('/posts/:id/unlike', authMiddleware, async (req: AuthRequest, res) =
 });
 
 // 获取帖子评论列表（包含多级回复）
-router.get('/posts/:id/comments', async (req, res) => {
+router.get('/posts/:id/comments', optionalAuthMiddleware, async (req: AuthRequest, res) => {
   const { id } = req.params;
   const postId = parseInt(id);
-
-  await db.read();
+  const userId = req.user?.id;
 
   const comments = db.data.comments
     .filter(c => c.post_id === postId)
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  const likedCommentIds = new Set<number>();
+  if (userId) {
+    db.data.commentLikes
+      .filter(l => l.user_id === userId)
+      .forEach(l => likedCommentIds.add(l.comment_id));
+  }
 
   const commentsWithAuthor = comments.map(comment => {
     const author = db.data.users.find(u => u.id === comment.author_id);
@@ -267,7 +277,8 @@ router.get('/posts/:id/comments', async (req, res) => {
       ...comment,
       author_name: author?.username,
       author_avatar: author?.avatar,
-      reply_to_username: replyToUser?.username
+      reply_to_username: replyToUser?.username,
+      liked: likedCommentIds.has(comment.id)
     };
   });
 
@@ -419,7 +430,6 @@ router.get('/:id', async (req, res) => {
   const { id } = req.params;
   const topicId = parseInt(id);
 
-  await db.read();
   const topic = db.data.topics.find(t => t.id === topicId);
 
   if (!topic) {

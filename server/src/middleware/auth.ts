@@ -38,3 +38,26 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
+
+export const optionalAuthMiddleware = (req: AuthRequest, _res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader) {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      const token = parts[1];
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        req.user = {
+          id: decoded.id,
+          username: decoded.username,
+          email: decoded.email
+        };
+      } catch (error) {
+        // 忽略无效 token，继续作为未登录用户处理
+      }
+    }
+  }
+
+  next();
+};
