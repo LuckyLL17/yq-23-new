@@ -79,7 +79,10 @@ router.get('/:id', async (req, res) => {
     follower_count: followerCount,
     following_count: followingCount,
     book_count: bookCount,
-    post_count: postCount
+    post_count: postCount,
+    reading_tags: user.reading_tags || [],
+    expertise_fields: user.expertise_fields || [],
+    shelf_style: user.shelf_style || 'grid'
   });
 });
 
@@ -259,6 +262,67 @@ router.get('/:id/books', async (req, res) => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   res.json(books);
+});
+
+router.put('/me', authMiddleware, async (req: AuthRequest, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  const userId = req.user.id;
+  const { avatar, bio, reading_tags, expertise_fields, shelf_style } = req.body;
+
+  const userIndex = db.data.users.findIndex(u => u.id === userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const user = db.data.users[userIndex];
+
+  if (avatar !== undefined) user.avatar = avatar;
+  if (bio !== undefined) user.bio = bio;
+  if (reading_tags !== undefined) user.reading_tags = reading_tags;
+  if (expertise_fields !== undefined) user.expertise_fields = expertise_fields;
+  if (shelf_style !== undefined) user.shelf_style = shelf_style;
+
+  await db.write();
+
+  res.json({
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    avatar: user.avatar,
+    bio: user.bio,
+    points: user.points,
+    reading_tags: user.reading_tags || [],
+    expertise_fields: user.expertise_fields || [],
+    shelf_style: user.shelf_style || 'grid'
+  });
+});
+
+router.get('/me/profile', authMiddleware, async (req: AuthRequest, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  const userId = req.user.id;
+  const user = db.data.users.find(u => u.id === userId);
+
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  res.json({
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    avatar: user.avatar,
+    bio: user.bio,
+    points: user.points,
+    reading_tags: user.reading_tags || [],
+    expertise_fields: user.expertise_fields || [],
+    shelf_style: user.shelf_style || 'grid'
+  });
 });
 
 export default router;

@@ -56,7 +56,17 @@ router.post('/register', async (req, res) => {
 
   res.status(201).json({
     token,
-    user: { id: newId, username, email, points: 100 }
+    user: { 
+      id: newId, 
+      username, 
+      email, 
+      points: 100,
+      avatar: undefined,
+      bio: undefined,
+      reading_tags: [],
+      expertise_fields: [],
+      shelf_style: 'grid'
+    }
   });
 });
 
@@ -88,7 +98,10 @@ router.post('/login', async (req, res) => {
       email: user.email,
       points: user.points,
       avatar: user.avatar,
-      bio: user.bio
+      bio: user.bio,
+      reading_tags: user.reading_tags || [],
+      expertise_fields: user.expertise_fields || [],
+      shelf_style: user.shelf_style || 'grid'
     }
   });
 });
@@ -111,7 +124,10 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
     email: user.email,
     points: user.points,
     avatar: user.avatar,
-    bio: user.bio
+    bio: user.bio,
+    reading_tags: user.reading_tags || [],
+    expertise_fields: user.expertise_fields || [],
+    shelf_style: user.shelf_style || 'grid'
   });
 });
 

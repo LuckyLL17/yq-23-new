@@ -21,6 +21,7 @@ import UserProfile from './pages/UserProfile';
 import UserFollowList from './pages/UserFollowList';
 import FollowingFeed from './pages/FollowingFeed';
 import ReadingStats from './pages/ReadingStats';
+import ProfileSettings from './pages/ProfileSettings';
 
 function App() {
   const { loading } = useAuth();
@@ -62,6 +63,7 @@ function App() {
             <Route path="/users/:id" element={<UserProfile />} />
             <Route path="/users/:id/followers" element={<UserFollowList type="followers" />} />
             <Route path="/users/:id/following" element={<UserFollowList type="following" />} />
+            <Route path="/profile-settings" element={<ProfileSettings />} />
             <Route path="/following" element={<FollowingFeed />} />
           </Routes>
         </main>

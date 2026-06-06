@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { User, Coins, BookOpen, MessageSquare, Users, Calendar, Heart, Eye, Star } from 'lucide-react';
+import { User, Coins, BookOpen, MessageSquare, Users, Calendar, Heart, Eye, Star, BookOpen as BookOpenIcon, Award, Settings } from 'lucide-react';
 import { usersAPI, exchangesAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -155,12 +155,15 @@ const UserProfile = () => {
                   {isFollowing ? '已关注' : '+ 关注'}
                 </button>
               ) : (
-                <Link
-                  to="/my-books"
-                  className="inline-block px-6 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors"
-                >
-                  个人中心
-                </Link>
+                <div className="flex space-x-2">
+                  <Link
+                    to="/profile-settings"
+                    className="inline-block px-6 py-2 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors flex items-center space-x-1"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>编辑资料</span>
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -225,6 +228,48 @@ const UserProfile = () => {
               </span>
             </div>
           </div>
+
+          {(user.reading_tags?.length > 0 || user.expertise_fields?.length > 0) && (
+            <div className="mt-6 pt-6 border-t border-gray-100 space-y-4">
+              {user.reading_tags && user.reading_tags.length > 0 && (
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <BookOpenIcon className="w-4 h-4 text-primary-500" />
+                    <span className="text-sm font-medium text-gray-700">阅读标签</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {user.reading_tags.map((tag: string, index: number) => (
+                      <span
+                        key={index}
+                        className="text-xs px-3 py-1 bg-primary-100 text-primary-600 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {user.expertise_fields && user.expertise_fields.length > 0 && (
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Award className="w-4 h-4 text-amber-500" />
+                    <span className="text-sm font-medium text-gray-700">擅长领域</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {user.expertise_fields.map((field: string, index: number) => (
+                      <span
+                        key={index}
+                        className="text-xs px-3 py-1 bg-amber-100 text-amber-600 rounded-full"
+                      >
+                        {field}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

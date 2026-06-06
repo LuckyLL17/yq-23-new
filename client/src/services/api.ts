@@ -235,6 +235,14 @@ export const usersAPI = {
     page?: number;
     limit?: number;
   }) => api.get('/users/feed/following', { params }),
+  getMyProfile: () => api.get('/users/me/profile'),
+  updateProfile: (data: {
+    avatar?: string;
+    bio?: string;
+    reading_tags?: string[];
+    expertise_fields?: string[];
+    shelf_style?: string;
+  }) => api.put('/users/me', data),
 };
 
 export const statsAPI = {

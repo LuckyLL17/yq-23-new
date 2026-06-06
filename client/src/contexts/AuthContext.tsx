@@ -8,6 +8,9 @@ interface User {
   points: number;
   avatar?: string;
   bio?: string;
+  reading_tags?: string[];
+  expertise_fields?: string[];
+  shelf_style?: string;
 }
 
 interface AuthContextType {

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Coins, Plus, BookCopy, User, LogOut, MessageSquare, Heart, Target, Award, Users, Sparkles, BarChart3 } from 'lucide-react';
+import { BookOpen, Coins, Plus, BookCopy, User, LogOut, MessageSquare, Heart, Target, Award, Users, Sparkles, BarChart3, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Navbar = () => {
@@ -103,6 +103,14 @@ const Navbar = () => {
                     <Coins className="w-4 h-4" />
                     <span className="font-medium">{user.points}</span>
                   </div>
+
+                  <Link
+                    to="/profile-settings"
+                    className="text-gray-400 hover:text-primary-500 transition-colors"
+                    title="资料设置"
+                  >
+                    <Settings className="w-5 h-5" />
+                  </Link>
 
                   <Link
                     to={`/users/${user.id}`}
