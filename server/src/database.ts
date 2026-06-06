@@ -127,6 +127,46 @@ interface WishlistItem {
   created_at: string;
 }
 
+interface ReadingGoal {
+  id: number;
+  user_id: number;
+  title: string;
+  description?: string;
+  target_books: number;
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'completed' | 'failed';
+  created_at: string;
+}
+
+interface GoalBook {
+  id: number;
+  goal_id: number;
+  book_id: number;
+  is_completed: boolean;
+  completed_at?: string;
+  added_at: string;
+}
+
+interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  type: 'reading' | 'goal' | 'social' | 'collection';
+  condition_type: 'books_read' | 'goals_completed' | 'posts_made' | 'books_added' | 'streak_days' | 'exchange_count';
+  condition_value: number;
+  points_reward: number;
+  created_at: string;
+}
+
+interface UserAchievement {
+  id: number;
+  user_id: number;
+  achievement_id: number;
+  unlocked_at: string;
+}
+
 interface Data {
   users: User[];
   books: Book[];
@@ -140,6 +180,10 @@ interface Data {
   commentLikes: CommentLike[];
   wishlists: Wishlist[];
   wishlistItems: WishlistItem[];
+  readingGoals: ReadingGoal[];
+  goalBooks: GoalBook[];
+  achievements: Achievement[];
+  userAchievements: UserAchievement[];
 }
 
 const defaultData: Data = {
@@ -154,7 +198,11 @@ const defaultData: Data = {
   postLikes: [],
   commentLikes: [],
   wishlists: [],
-  wishlistItems: []
+  wishlistItems: [],
+  readingGoals: [],
+  goalBooks: [],
+  achievements: [],
+  userAchievements: []
 };
 
 const file = path.join(dataDir, 'db.json');
@@ -382,6 +430,52 @@ async function initDatabase() {
       { id: 2, wishlist_id: 1, book_id: 4, created_at: new Date().toISOString() },
       { id: 3, wishlist_id: 2, book_id: 5, created_at: new Date().toISOString() },
       { id: 4, wishlist_id: 3, book_id: 1, created_at: new Date().toISOString() }
+    ];
+
+    db.data.achievements = [
+      { id: 1, name: '初入书虫', description: '读完第一本书', icon: '📖', type: 'reading', condition_type: 'books_read', condition_value: 1, points_reward: 10, created_at: new Date().toISOString() },
+      { id: 2, name: '阅读新手', description: '累计读完5本书', icon: '📚', type: 'reading', condition_type: 'books_read', condition_value: 5, points_reward: 30, created_at: new Date().toISOString() },
+      { id: 3, name: '阅读达人', description: '累计读完10本书', icon: '🏆', type: 'reading', condition_type: 'books_read', condition_value: 10, points_reward: 50, created_at: new Date().toISOString() },
+      { id: 4, name: '读书狂魔', description: '累计读完20本书', icon: '👑', type: 'reading', condition_type: 'books_read', condition_value: 20, points_reward: 100, created_at: new Date().toISOString() },
+      { id: 5, name: '目标达成者', description: '完成第一个阅读目标', icon: '🎯', type: 'goal', condition_type: 'goals_completed', condition_value: 1, points_reward: 20, created_at: new Date().toISOString() },
+      { id: 6, name: '持之以恒', description: '完成5个阅读目标', icon: '⭐', type: 'goal', condition_type: 'goals_completed', condition_value: 5, points_reward: 60, created_at: new Date().toISOString() },
+      { id: 7, name: '社群活跃分子', description: '发布第一篇帖子', icon: '✍️', type: 'social', condition_type: 'posts_made', condition_value: 1, points_reward: 5, created_at: new Date().toISOString() },
+      { id: 8, name: '分享达人', description: '发布10篇帖子', icon: '📝', type: 'social', condition_type: 'posts_made', condition_value: 10, points_reward: 40, created_at: new Date().toISOString() },
+      { id: 9, name: '藏书新手', description: '上架第一本书', icon: '📦', type: 'collection', condition_type: 'books_added', condition_value: 1, points_reward: 10, created_at: new Date().toISOString() },
+      { id: 10, name: '小图书馆', description: '上架10本书', icon: '🏛️', type: 'collection', condition_type: 'books_added', condition_value: 10, points_reward: 50, created_at: new Date().toISOString() },
+      { id: 11, name: '交换新手', description: '完成第一次书籍交换', icon: '🔄', type: 'social', condition_type: 'exchange_count', condition_value: 1, points_reward: 15, created_at: new Date().toISOString() },
+      { id: 12, name: '书漂达人', description: '完成5次书籍交换', icon: '🌊', type: 'social', condition_type: 'exchange_count', condition_value: 5, points_reward: 80, created_at: new Date().toISOString() }
+    ];
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    db.data.readingGoals = [
+      {
+        id: 1,
+        user_id: 1,
+        title: '六月阅读计划',
+        description: '本月目标读完4本书',
+        target_books: 4,
+        start_date: startOfMonth.toISOString(),
+        end_date: endOfMonth.toISOString(),
+        status: 'active',
+        created_at: new Date().toISOString()
+      }
+    ];
+
+    db.data.goalBooks = [
+      { id: 1, goal_id: 1, book_id: 1, is_completed: true, completed_at: new Date(Date.now() - 86400000 * 5).toISOString(), added_at: new Date(Date.now() - 86400000 * 10).toISOString() },
+      { id: 2, goal_id: 1, book_id: 2, is_completed: true, completed_at: new Date(Date.now() - 86400000 * 3).toISOString(), added_at: new Date(Date.now() - 86400000 * 8).toISOString() },
+      { id: 3, goal_id: 1, book_id: 3, is_completed: false, added_at: new Date(Date.now() - 86400000 * 2).toISOString() }
+    ];
+
+    db.data.userAchievements = [
+      { id: 1, user_id: 1, achievement_id: 1, unlocked_at: new Date(Date.now() - 86400000 * 10).toISOString() },
+      { id: 2, user_id: 1, achievement_id: 2, unlocked_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 3, user_id: 1, achievement_id: 7, unlocked_at: new Date(Date.now() - 86400000 * 7).toISOString() },
+      { id: 4, user_id: 1, achievement_id: 9, unlocked_at: new Date(Date.now() - 86400000 * 15).toISOString() }
     ];
 
     await db.write();

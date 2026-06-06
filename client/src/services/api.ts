@@ -130,4 +130,41 @@ export const wishlistsAPI = {
     api.post(`/wishlists/${wishlistId}/items/batch-remove`, { book_ids: bookIds }),
 };
 
+export const goalsAPI = {
+  getGoals: () => api.get('/goals'),
+  createGoal: (goal: {
+    title: string;
+    description?: string;
+    target_books: number;
+    start_date: string;
+    end_date: string;
+  }) => api.post('/goals', goal),
+  getGoal: (id: number) => api.get(`/goals/${id}`),
+  updateGoal: (id: number, data: {
+    title?: string;
+    description?: string;
+    target_books?: number;
+    start_date?: string;
+    end_date?: string;
+    status?: string;
+  }) => api.put(`/goals/${id}`, data),
+  deleteGoal: (id: number) => api.delete(`/goals/${id}`),
+  addBookToGoal: (goalId: number, bookId: number) =>
+    api.post(`/goals/${goalId}/books`, { book_id: bookId }),
+  removeBookFromGoal: (goalId: number, bookId: number) =>
+    api.delete(`/goals/${goalId}/books/${bookId}`),
+  completeBook: (goalId: number, bookId: number) =>
+    api.post(`/goals/${goalId}/books/${bookId}/complete`),
+  uncompleteBook: (goalId: number, bookId: number) =>
+    api.post(`/goals/${goalId}/books/${bookId}/uncomplete`),
+};
+
+export const achievementsAPI = {
+  getAchievements: () => api.get('/achievements'),
+  getMyAchievements: () => api.get('/achievements/mine'),
+  getStats: () => api.get('/achievements/stats'),
+  checkAchievements: () => api.post('/achievements/check'),
+  getAchievementTypes: () => api.get('/achievements/types'),
+};
+
 export default api;

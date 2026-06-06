@@ -5,7 +5,7 @@
       "username": "booklover",
       "email": "booklover@example.com",
       "password": "$2a$10$O3J0iA3ps9t1lQvrz3PBneyoR2ftxE5x/kQ2d5mU9D0KVAptLUXwu",
-      "points": 180,
+      "points": 200,
       "bio": "热爱阅读，喜欢分享好书",
       "created_at": "2026-06-05T08:18:23.178Z"
     },
@@ -659,6 +659,14 @@
       "description": "我的收藏",
       "is_default": true,
       "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 4,
+      "user_id": 1,
+      "name": "11",
+      "description": "131232",
+      "is_default": false,
+      "created_at": "2026-06-06T03:27:02.854Z"
     }
   ],
   "wishlistItems": [
@@ -685,6 +693,282 @@
       "wishlist_id": 3,
       "book_id": 1,
       "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 6,
+      "wishlist_id": 4,
+      "book_id": 4,
+      "created_at": "2026-06-06T03:27:03.032Z"
+    },
+    {
+      "id": 7,
+      "wishlist_id": 2,
+      "book_id": 4,
+      "created_at": "2026-06-06T03:38:28.497Z"
+    }
+  ],
+  "readingGoals": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "title": "六月阅读计划",
+      "description": "本月目标读完4本书",
+      "target_books": 4,
+      "start_date": "2026-06-01T00:00:00.000Z",
+      "end_date": "2026-06-30T23:59:59.999Z",
+      "status": "completed",
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "user_id": 1,
+      "title": "112",
+      "description": "2132132",
+      "target_books": 5,
+      "start_date": "2026-06-04T00:00:00.000Z",
+      "end_date": "2026-06-02T00:00:00.000Z",
+      "status": "completed",
+      "created_at": "2026-06-06T05:51:51.685Z"
+    }
+  ],
+  "goalBooks": [
+    {
+      "id": 1,
+      "goal_id": 1,
+      "book_id": 1,
+      "is_completed": true,
+      "completed_at": "2026-06-02T00:00:00.000Z",
+      "added_at": "2026-05-28T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "goal_id": 1,
+      "book_id": 2,
+      "is_completed": true,
+      "completed_at": "2026-06-04T00:00:00.000Z",
+      "added_at": "2026-05-30T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "goal_id": 1,
+      "book_id": 3,
+      "is_completed": true,
+      "added_at": "2026-06-03T00:00:00.000Z",
+      "completed_at": "2026-06-06T04:52:33.070Z"
+    },
+    {
+      "id": 4,
+      "goal_id": 1,
+      "book_id": 4,
+      "is_completed": true,
+      "added_at": "2026-06-06T04:54:09.481Z",
+      "completed_at": "2026-06-06T04:54:09.496Z"
+    },
+    {
+      "id": 5,
+      "goal_id": 2,
+      "book_id": 4,
+      "is_completed": true,
+      "added_at": "2026-06-06T05:52:02.410Z",
+      "completed_at": "2026-06-06T05:52:34.843Z"
+    },
+    {
+      "id": 6,
+      "goal_id": 2,
+      "book_id": 1,
+      "is_completed": true,
+      "added_at": "2026-06-06T05:52:06.920Z",
+      "completed_at": "2026-06-06T05:52:34.299Z"
+    },
+    {
+      "id": 7,
+      "goal_id": 2,
+      "book_id": 6,
+      "is_completed": true,
+      "added_at": "2026-06-06T05:52:08.916Z",
+      "completed_at": "2026-06-06T05:52:33.260Z"
+    },
+    {
+      "id": 8,
+      "goal_id": 2,
+      "book_id": 8,
+      "is_completed": true,
+      "added_at": "2026-06-06T05:52:17.359Z",
+      "completed_at": "2026-06-06T05:52:32.389Z"
+    },
+    {
+      "id": 9,
+      "goal_id": 2,
+      "book_id": 5,
+      "is_completed": true,
+      "added_at": "2026-06-06T05:52:18.852Z",
+      "completed_at": "2026-06-06T05:52:31.636Z"
+    }
+  ],
+  "achievements": [
+    {
+      "id": 1,
+      "name": "初入书虫",
+      "description": "读完第一本书",
+      "icon": "📖",
+      "type": "reading",
+      "condition_type": "books_read",
+      "condition_value": 1,
+      "points_reward": 10,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "阅读新手",
+      "description": "累计读完5本书",
+      "icon": "📚",
+      "type": "reading",
+      "condition_type": "books_read",
+      "condition_value": 5,
+      "points_reward": 30,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "name": "阅读达人",
+      "description": "累计读完10本书",
+      "icon": "🏆",
+      "type": "reading",
+      "condition_type": "books_read",
+      "condition_value": 10,
+      "points_reward": 50,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "name": "读书狂魔",
+      "description": "累计读完20本书",
+      "icon": "👑",
+      "type": "reading",
+      "condition_type": "books_read",
+      "condition_value": 20,
+      "points_reward": 100,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "name": "目标达成者",
+      "description": "完成第一个阅读目标",
+      "icon": "🎯",
+      "type": "goal",
+      "condition_type": "goals_completed",
+      "condition_value": 1,
+      "points_reward": 20,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 6,
+      "name": "持之以恒",
+      "description": "完成5个阅读目标",
+      "icon": "⭐",
+      "type": "goal",
+      "condition_type": "goals_completed",
+      "condition_value": 5,
+      "points_reward": 60,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 7,
+      "name": "社群活跃分子",
+      "description": "发布第一篇帖子",
+      "icon": "✍️",
+      "type": "social",
+      "condition_type": "posts_made",
+      "condition_value": 1,
+      "points_reward": 5,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 8,
+      "name": "分享达人",
+      "description": "发布10篇帖子",
+      "icon": "📝",
+      "type": "social",
+      "condition_type": "posts_made",
+      "condition_value": 10,
+      "points_reward": 40,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 9,
+      "name": "藏书新手",
+      "description": "上架第一本书",
+      "icon": "📦",
+      "type": "collection",
+      "condition_type": "books_added",
+      "condition_value": 1,
+      "points_reward": 10,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 10,
+      "name": "小图书馆",
+      "description": "上架10本书",
+      "icon": "🏛️",
+      "type": "collection",
+      "condition_type": "books_added",
+      "condition_value": 10,
+      "points_reward": 50,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 11,
+      "name": "交换新手",
+      "description": "完成第一次书籍交换",
+      "icon": "🔄",
+      "type": "social",
+      "condition_type": "exchange_count",
+      "condition_value": 1,
+      "points_reward": 15,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 12,
+      "name": "书漂达人",
+      "description": "完成5次书籍交换",
+      "icon": "🌊",
+      "type": "social",
+      "condition_type": "exchange_count",
+      "condition_value": 5,
+      "points_reward": 80,
+      "created_at": "2026-06-01T00:00:00.000Z"
+    }
+  ],
+  "userAchievements": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "achievement_id": 1,
+      "unlocked_at": "2026-06-02T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "user_id": 1,
+      "achievement_id": 2,
+      "unlocked_at": "2026-06-05T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "user_id": 1,
+      "achievement_id": 7,
+      "unlocked_at": "2026-06-03T00:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "user_id": 1,
+      "achievement_id": 9,
+      "unlocked_at": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "user_id": 1,
+      "achievement_id": 5,
+      "unlocked_at": "2026-06-06T04:54:09.497Z"
     }
   ]
 }
