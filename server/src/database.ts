@@ -194,6 +194,13 @@ interface ReadingClubParticipant {
   registered_at: string;
 }
 
+interface Follow {
+  id: number;
+  follower_id: number;
+  following_id: number;
+  created_at: string;
+}
+
 interface Data {
   users: User[];
   books: Book[];
@@ -213,6 +220,7 @@ interface Data {
   userAchievements: UserAchievement[];
   readingClubs: ReadingClub[];
   readingClubParticipants: ReadingClubParticipant[];
+  follows: Follow[];
 }
 
 const defaultData: Data = {
@@ -233,7 +241,8 @@ const defaultData: Data = {
   achievements: [],
   userAchievements: [],
   readingClubs: [],
-  readingClubParticipants: []
+  readingClubParticipants: [],
+  follows: []
 };
 
 const file = path.join(dataDir, 'db.json');
@@ -573,6 +582,13 @@ async function initDatabase() {
       { id: 4, club_id: 2, user_id: 3, status: 'registered', registered_at: new Date(Date.now() - 86400000 * 2).toISOString() },
       { id: 5, club_id: 3, user_id: 1, status: 'attended', registered_at: new Date(Date.now() - 86400000 * 8).toISOString() },
       { id: 6, club_id: 3, user_id: 2, status: 'attended', registered_at: new Date(Date.now() - 86400000 * 7).toISOString() }
+    ];
+
+    db.data.follows = [
+      { id: 1, follower_id: 2, following_id: 1, created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 2, follower_id: 3, following_id: 1, created_at: new Date(Date.now() - 86400000 * 4).toISOString() },
+      { id: 3, follower_id: 1, following_id: 2, created_at: new Date(Date.now() - 86400000 * 3).toISOString() },
+      { id: 4, follower_id: 3, following_id: 2, created_at: new Date(Date.now() - 86400000 * 2).toISOString() }
     ];
 
     await db.write();

@@ -211,4 +211,22 @@ export const readingClubsAPI = {
   getParticipants: (id: number) => api.get(`/reading-clubs/${id}/participants`),
 };
 
+export const usersAPI = {
+  getUser: (id: number) => api.get(`/users/${id}`),
+  getFollowStatus: (id: number) => api.get(`/users/${id}/follow-status`),
+  followUser: (id: number) => api.post(`/users/${id}/follow`),
+  unfollowUser: (id: number) => api.post(`/users/${id}/unfollow`),
+  getFollowers: (id: number) => api.get(`/users/${id}/followers`),
+  getFollowing: (id: number) => api.get(`/users/${id}/following`),
+  getUserPosts: (id: number, params?: {
+    page?: number;
+    limit?: number;
+  }) => api.get(`/users/${id}/posts`, { params }),
+  getUserBooks: (id: number) => api.get(`/users/${id}/books`),
+  getFollowingFeed: (params?: {
+    page?: number;
+    limit?: number;
+  }) => api.get('/users/feed/following', { params }),
+};
+
 export default api;

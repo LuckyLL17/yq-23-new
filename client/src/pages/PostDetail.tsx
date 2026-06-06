@@ -70,15 +70,37 @@ const CommentItem = ({
   return (
     <div className={`${depth > 0 ? 'ml-8 mt-3' : 'mt-4'}`}>
       <div className="flex gap-3">
-        <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center shrink-0">
-          <User className="w-5 h-5 text-primary-600" />
-        </div>
+        <Link
+          to={`/users/${comment.author_id}`}
+          className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity overflow-hidden"
+        >
+          {comment.author_avatar ? (
+            <img
+              src={comment.author_avatar}
+              alt={comment.author_name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User className="w-5 h-5 text-primary-600" />
+          )}
+        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium text-book-ink">{comment.author_name}</span>
-            {comment.reply_to_username && (
+            <Link
+              to={`/users/${comment.author_id}`}
+              className="font-medium text-book-ink hover:text-primary-500 transition-colors"
+            >
+              {comment.author_name}
+            </Link>
+            {comment.reply_to_username && comment.reply_to_user_id && (
               <span className="text-gray-400 text-sm">
-                回复 <span className="text-primary-600">@{comment.reply_to_username}</span>
+                回复{' '}
+                <Link
+                  to={`/users/${comment.reply_to_user_id}`}
+                  className="text-primary-600 hover:underline"
+                >
+                  @{comment.reply_to_username}
+                </Link>
               </span>
             )}
             <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
@@ -444,11 +466,27 @@ const PostDetail = () => {
         </h1>
 
         <div className="flex items-center gap-4 pb-6 border-b border-gray-100 mb-6">
-          <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-            <User className="w-6 h-6 text-primary-600" />
-          </div>
+          <Link
+            to={`/users/${post.author_id}`}
+            className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity overflow-hidden shrink-0"
+          >
+            {post.author_avatar ? (
+              <img
+                src={post.author_avatar}
+                alt={post.author_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-6 h-6 text-primary-600" />
+            )}
+          </Link>
           <div className="flex-1">
-            <p className="font-medium text-book-ink">{post.author_name}</p>
+            <Link
+              to={`/users/${post.author_id}`}
+              className="font-medium text-book-ink hover:text-primary-500 transition-colors"
+            >
+              {post.author_name}
+            </Link>
             <div className="flex items-center gap-3 text-sm text-gray-500">
               <span className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Coins, User, Star, MessageSquare, ArrowLeft, Send, Heart, ChevronDown, Check, Plus, X } from 'lucide-react';
 import { booksAPI, exchangesAPI, wishlistsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -208,15 +208,26 @@ const BookDetail = () => {
 
               <div className="mt-6 pt-6 border-t">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-primary-600" />
+                  <Link
+                    to={`/users/${book.current_holder_id}`}
+                    className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+                  >
+                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
+                      {book.holder_avatar ? (
+                        <img
+                          src={book.holder_avatar}
+                          alt={book.holder_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-primary-600" />
+                      )}
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">当前持有者</p>
                       <p className="font-medium text-book-ink">{book.holder_name}</p>
                     </div>
-                  </div>
+                  </Link>
 
                   {isOwner && (
                     <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm">

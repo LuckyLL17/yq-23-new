@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Coins, User, Heart } from 'lucide-react';
 
 interface BookCardProps {
@@ -12,6 +13,7 @@ interface BookCardProps {
     category?: string;
     status?: string;
     holder_id?: number;
+    current_holder_id?: number;
   };
   showWishlist?: boolean;
   isInWishlist?: boolean;
@@ -26,11 +28,21 @@ const BookCard: React.FC<BookCardProps> = ({
   isLookingFor = false,
   onWishlistClick
 }) => {
+  const navigate = useNavigate();
+
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (onWishlistClick) {
       onWishlistClick(book.id);
+    }
+  };
+
+  const handleHolderClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (book.current_holder_id) {
+      navigate(`/users/${book.current_holder_id}`);
     }
   };
 
@@ -86,11 +98,14 @@ const BookCard: React.FC<BookCardProps> = ({
         <p className="text-gray-500 text-sm mt-1">{book.author}</p>
         <div className="flex items-center justify-between mt-3">
           <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">{book.condition}</span>
-          {book.holder_name && (
-            <div className="flex items-center space-x-1 text-xs text-gray-500">
+          {book.holder_name && book.current_holder_id && (
+            <span
+              onClick={handleHolderClick}
+              className="flex items-center space-x-1 text-xs text-gray-500 hover:text-primary-500 transition-colors cursor-pointer"
+            >
               <User className="w-3 h-3" />
               <span>{book.holder_name}</span>
-            </div>
+            </span>
           )}
         </div>
       </div>

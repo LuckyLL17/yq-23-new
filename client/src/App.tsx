@@ -17,6 +17,9 @@ import Achievements from './pages/Achievements';
 import ReadingClubs from './pages/ReadingClubs';
 import ReadingClubDetail from './pages/ReadingClubDetail';
 import ReadingClubEdit from './pages/ReadingClubEdit';
+import UserProfile from './pages/UserProfile';
+import UserFollowList from './pages/UserFollowList';
+import FollowingFeed from './pages/FollowingFeed';
 
 function App() {
   const { loading } = useAuth();
@@ -54,6 +57,10 @@ function App() {
             <Route path="/reading-clubs" element={<ReadingClubs />} />
             <Route path="/reading-clubs/:id" element={<ReadingClubDetail />} />
             <Route path="/reading-clubs/:id/edit" element={<ReadingClubEdit />} />
+            <Route path="/users/:id" element={<UserProfile />} />
+            <Route path="/users/:id/followers" element={<UserFollowList type="followers" />} />
+            <Route path="/users/:id/following" element={<UserFollowList type="following" />} />
+            <Route path="/following" element={<FollowingFeed />} />
           </Routes>
         </main>
       </div>
