@@ -38,6 +38,18 @@ export const booksAPI = {
   }) => api.get('/books', { params }),
   getBook: (id: number) => api.get(`/books/${id}`),
   createBook: (book: any) => api.post('/books', book),
+  updateBook: (id: number, data: any) => api.put(`/books/${id}`, data),
+  deleteBook: (id: number) => api.delete(`/books/${id}`),
+  batchCreateBooks: (books: any[]) => api.post('/books/batch', { books }),
+  batchUpdateBooks: (bookIds: number[], updates: any) =>
+    api.put('/books/batch/update', { book_ids: bookIds, updates }),
+  exportBooks: (format: 'json' | 'csv', bookIds?: number[]) => {
+    const params: any = { format };
+    if (bookIds && bookIds.length > 0) {
+      params.book_ids = bookIds.join(',');
+    }
+    return api.get('/books/export', { params, responseType: 'blob' });
+  },
   getDriftRecords: (bookId: number) => api.get(`/books/${bookId}/drift-records`),
   addDriftRecord: (bookId: number, record: any) =>
     api.post(`/books/${bookId}/drift-records`, record),

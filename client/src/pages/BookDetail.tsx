@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Coins, User, Star, MessageSquare, ArrowLeft, Send, Heart, ChevronDown, Check, Plus, X } from 'lucide-react';
+import { Coins, User, Star, MessageSquare, ArrowLeft, Send, Heart, ChevronDown, Check, Plus, X, Edit3 } from 'lucide-react';
 import { booksAPI, exchangesAPI, wishlistsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -230,8 +230,17 @@ const BookDetail = () => {
                   </Link>
 
                   {isOwner && (
-                    <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm">
-                      这本书在你的书架上
+                    <div className="flex items-center space-x-2">
+                      <Link
+                        to={`/books/${book.id}/edit`}
+                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors flex items-center space-x-1"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        <span>编辑</span>
+                      </Link>
+                      <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm">
+                        这本书在你的书架上
+                      </div>
                     </div>
                   )}
                 </div>

@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import BookDetail from './pages/BookDetail';
 import AddBook from './pages/AddBook';
+import BatchAddBook from './pages/BatchAddBook';
+import EditBook from './pages/EditBook';
 import MyBooks from './pages/MyBooks';
 import Exchanges from './pages/Exchanges';
 import Topics from './pages/Topics';
@@ -47,7 +49,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/books/:id" element={<BookDetail />} />
+            <Route path="/books/:id/edit" element={<EditBook />} />
             <Route path="/add-book" element={<AddBook />} />
+            <Route path="/batch-add-book" element={<BatchAddBook />} />
             <Route path="/my-books" element={<MyBooks />} />
             <Route path="/wishlists" element={<Wishlists />} />
             <Route path="/reading-goals" element={<ReadingGoals />} />
