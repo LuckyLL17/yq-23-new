@@ -20,6 +20,7 @@ import ReadingClubEdit from './pages/ReadingClubEdit';
 import UserProfile from './pages/UserProfile';
 import UserFollowList from './pages/UserFollowList';
 import FollowingFeed from './pages/FollowingFeed';
+import ReadingStats from './pages/ReadingStats';
 
 function App() {
   const { loading } = useAuth();
@@ -50,6 +51,7 @@ function App() {
             <Route path="/wishlists" element={<Wishlists />} />
             <Route path="/reading-goals" element={<ReadingGoals />} />
             <Route path="/achievements" element={<Achievements />} />
+            <Route path="/reading-stats" element={<ReadingStats />} />
             <Route path="/exchanges" element={<Exchanges />} />
             <Route path="/topics" element={<Topics />} />
             <Route path="/topics/posts/:id" element={<PostDetail />} />

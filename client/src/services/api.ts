@@ -229,4 +229,13 @@ export const usersAPI = {
   }) => api.get('/users/feed/following', { params }),
 };
 
+export const statsAPI = {
+  getOverview: () => api.get('/stats/overview'),
+  getMonthly: () => api.get('/stats/monthly'),
+  getCategories: () => api.get('/stats/categories'),
+  getReadingTrend: () => api.get('/stats/reading-trend'),
+  exportData: (format: 'json' | 'csv') =>
+    api.get(`/stats/export?format=${format}`, { responseType: 'blob' }),
+};
+
 export default api;
