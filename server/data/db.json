@@ -5,7 +5,7 @@
       "username": "booklover",
       "email": "booklover@example.com",
       "password": "$2a$10$O3J0iA3ps9t1lQvrz3PBneyoR2ftxE5x/kQ2d5mU9D0KVAptLUXwu",
-      "points": 150,
+      "points": 180,
       "bio": "热爱阅读，喜欢分享好书",
       "created_at": "2026-06-05T08:18:23.178Z"
     },
@@ -98,6 +98,51 @@
       "status": "available",
       "points_required": 18,
       "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 6,
+      "title": "1111",
+      "author": "111",
+      "cover": "/uploads/img-1780673009094-436467182.png",
+      "description": "阿斯顿发多少发多少分",
+      "isbn": "大撒的撒的",
+      "category": "科幻",
+      "condition": "九成新",
+      "owner_id": 1,
+      "current_holder_id": 1,
+      "status": "available",
+      "points_required": 10,
+      "created_at": "2026-06-05T15:23:32.367Z"
+    },
+    {
+      "id": 7,
+      "title": "阿斯顿发多少分",
+      "author": "发生的阿斯顿发s d f",
+      "cover": "/uploads/img-1780673025512-89501016.png",
+      "description": " 阿凡达大撒发",
+      "isbn": "上的发水淀粉水淀粉",
+      "category": "",
+      "condition": "九成新",
+      "owner_id": 1,
+      "current_holder_id": 1,
+      "status": "available",
+      "points_required": 10,
+      "created_at": "2026-06-05T15:23:49.958Z"
+    },
+    {
+      "id": 8,
+      "title": "暗示法发多少",
+      "author": "多少分撒发生的f s d",
+      "cover": "/uploads/img-1780673608951-188826337.png",
+      "description": "",
+      "isbn": "分撒发多少发多少分",
+      "category": "",
+      "condition": "九成新",
+      "owner_id": 1,
+      "current_holder_id": 1,
+      "status": "available",
+      "points_required": 10,
+      "created_at": "2026-06-05T15:33:30.224Z"
     }
   ],
   "driftRecords": [
@@ -220,9 +265,9 @@
       "images": [
         "https://picsum.photos/seed/scifi/600/300"
       ],
-      "view_count": 256,
+      "view_count": 258,
       "like_count": 32,
-      "comment_count": 5,
+      "comment_count": 6,
       "created_at": "2026-06-04T08:18:23.180Z",
       "updated_at": "2026-06-04T08:18:23.180Z"
     },
@@ -250,7 +295,7 @@
         4
       ],
       "images": [],
-      "view_count": 77,
+      "view_count": 83,
       "like_count": 13,
       "comment_count": 3,
       "created_at": "2026-06-05T06:18:23.180Z",
@@ -282,10 +327,53 @@
       "topic_ids": [],
       "images": [],
       "view_count": 2,
-      "like_count": 0,
+      "like_count": 1,
       "comment_count": 0,
       "created_at": "2026-06-05T14:32:07.641Z",
       "updated_at": "2026-06-05T14:32:07.641Z"
+    },
+    {
+      "id": 7,
+      "title": "范围发发多少f d s f",
+      "content": "安德森发多少分的",
+      "author_id": 1,
+      "topic_ids": [],
+      "images": [
+        "/uploads/img-1780673072771-396434916.png"
+      ],
+      "view_count": 1,
+      "like_count": 0,
+      "comment_count": 0,
+      "created_at": "2026-06-05T15:24:35.984Z",
+      "updated_at": "2026-06-05T15:24:35.984Z"
+    },
+    {
+      "id": 8,
+      "title": "大声点撒的",
+      "content": "大撒的撒的\n\n![图片](/uploads/img-1780673087354-289650825.png)",
+      "author_id": 1,
+      "topic_ids": [],
+      "images": [],
+      "view_count": 3,
+      "like_count": 0,
+      "comment_count": 0,
+      "created_at": "2026-06-05T15:24:48.918Z",
+      "updated_at": "2026-06-05T15:24:48.918Z"
+    },
+    {
+      "id": 9,
+      "title": "发大水f da s f",
+      "content": "的撒发生的发生的\n\n![图片](/uploads/img-1780673618956-919263311.png)",
+      "author_id": 1,
+      "topic_ids": [],
+      "images": [
+        "/uploads/img-1780673623257-781011237.png"
+      ],
+      "view_count": 1,
+      "like_count": 0,
+      "comment_count": 0,
+      "created_at": "2026-06-05T15:33:44.308Z",
+      "updated_at": "2026-06-05T15:33:44.308Z"
     }
   ],
   "comments": [
@@ -447,6 +535,16 @@
       "reply_to_user_id": 1,
       "like_count": 0,
       "created_at": "2026-06-05T14:30:59.522Z"
+    },
+    {
+      "id": 18,
+      "post_id": 2,
+      "author_id": 1,
+      "content": "好红红火火",
+      "parent_id": 5,
+      "reply_to_user_id": 1,
+      "like_count": 0,
+      "created_at": "2026-06-05T14:55:39.631Z"
     }
   ],
   "postLikes": [
@@ -460,12 +558,6 @@
       "id": 2,
       "post_id": 1,
       "user_id": 3,
-      "created_at": "2026-06-05T08:18:23.180Z"
-    },
-    {
-      "id": 3,
-      "post_id": 2,
-      "user_id": 1,
       "created_at": "2026-06-05T08:18:23.180Z"
     },
     {
@@ -503,6 +595,18 @@
       "post_id": 4,
       "user_id": 1,
       "created_at": "2026-06-05T14:27:03.270Z"
+    },
+    {
+      "id": 10,
+      "post_id": 6,
+      "user_id": 1,
+      "created_at": "2026-06-05T14:51:19.470Z"
+    },
+    {
+      "id": 11,
+      "post_id": 2,
+      "user_id": 1,
+      "created_at": "2026-06-05T14:54:39.688Z"
     }
   ],
   "commentLikes": [
@@ -529,6 +633,58 @@
       "comment_id": 10,
       "user_id": 1,
       "created_at": "2026-06-05T14:28:54.104Z"
+    }
+  ],
+  "wishlists": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "name": "默认心愿单",
+      "description": "我的收藏",
+      "is_default": true,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 2,
+      "user_id": 1,
+      "name": "想读书单",
+      "description": "计划要读的书",
+      "is_default": false,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 3,
+      "user_id": 2,
+      "name": "默认心愿单",
+      "description": "我的收藏",
+      "is_default": true,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    }
+  ],
+  "wishlistItems": [
+    {
+      "id": 1,
+      "wishlist_id": 1,
+      "book_id": 2,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 2,
+      "wishlist_id": 1,
+      "book_id": 4,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 3,
+      "wishlist_id": 2,
+      "book_id": 5,
+      "created_at": "2026-06-05T08:18:23.180Z"
+    },
+    {
+      "id": 4,
+      "wishlist_id": 3,
+      "book_id": 1,
+      "created_at": "2026-06-05T08:18:23.180Z"
     }
   ]
 }

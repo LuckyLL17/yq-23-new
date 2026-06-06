@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Coins, BookOpen, Sparkles, Filter, X, Clock, ChevronDown } from 'lucide-react';
-import { booksAPI } from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, Coins, BookOpen, Sparkles, Filter, X, Clock, ChevronDown, Heart } from 'lucide-react';
+import { booksAPI, wishlistsAPI } from '../services/api';
 import BookCard from '../components/BookCard';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -15,6 +15,7 @@ const SORT_OPTIONS = [
 
 const Home = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [books, setBooks] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -23,6 +24,8 @@ const Home = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [searchHistory, setSearchHistory] = useState<any[]>([]);
+  const [wishlistBookIds, setWishlistBookIds] = useState<number[]>([]);
+  const [defaultWishlistId, setDefaultWishlistId] = useState<number | null>(null);
   
   const [filters, setFilters] = useState({
     condition: '',
@@ -56,6 +59,10 @@ const Home = () => {
   useEffect(() => {
     if (user) {
       fetchSearchHistory();
+      fetchWishlistData();
+    } else {
+      setWishlistBookIds([]);
+      setDefaultWishlistId(null);
     }
   }, [user]);
 
@@ -65,6 +72,56 @@ const Home = () => {
       setSearchHistory(res.data);
     } catch (error) {
       console.error('Failed to fetch search history:', error);
+    }
+  };
+
+  const fetchWishlistData = async () => {
+    try {
+      const res = await wishlistsAPI.getWishlists();
+      const wishlists = res.data;
+      if (wishlists.length > 0) {
+        const defaultList = wishlists.find((w: any) => w.is_default) || wishlists[0];
+        setDefaultWishlistId(defaultList.id);
+        
+        const allBookIds: number[] = [];
+        for (const wl of wishlists) {
+          const detailRes = await wishlistsAPI.getWishlist(wl.id);
+          detailRes.data.books.forEach((b: any) => {
+            if (!allBookIds.includes(b.id)) {
+              allBookIds.push(b.id);
+            }
+          });
+        }
+        setWishlistBookIds(allBookIds);
+      }
+    } catch (error) {
+      console.error('Failed to fetch wishlist data:', error);
+    }
+  };
+
+  const handleToggleWishlist = async (bookId: number) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (!defaultWishlistId) {
+      alert('请先创建心愿单');
+      return;
+    }
+
+    const isInWishlist = wishlistBookIds.includes(bookId);
+
+    try {
+      if (isInWishlist) {
+        await wishlistsAPI.removeFromWishlist(defaultWishlistId, bookId);
+        setWishlistBookIds(wishlistBookIds.filter(id => id !== bookId));
+      } else {
+        await wishlistsAPI.addToWishlist(defaultWishlistId, bookId);
+        setWishlistBookIds([...wishlistBookIds, bookId]);
+      }
+    } catch (err: any) {
+      console.error('Failed to toggle wishlist:', err);
     }
   };
 
@@ -382,7 +439,12 @@ const Home = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {books.map((book) => (
             <Link key={book.id} to={`/books/${book.id}`}>
-              <BookCard book={book} />
+              <BookCard
+                book={book}
+                showWishlist={!!user}
+                isInWishlist={wishlistBookIds.includes(book.id)}
+                onWishlistClick={handleToggleWishlist}
+              />
             </Link>
           ))}
         </div>

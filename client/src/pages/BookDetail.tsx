@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Coins, User, Star, MessageSquare, ArrowLeft, Send } from 'lucide-react';
-import { booksAPI, exchangesAPI } from '../services/api';
+import { Coins, User, Star, MessageSquare, ArrowLeft, Send, Heart, ChevronDown, Check, Plus, X } from 'lucide-react';
+import { booksAPI, exchangesAPI, wishlistsAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const BookDetail = () => {
@@ -17,6 +17,16 @@ const BookDetail = () => {
   const [addingNote, setAddingNote] = useState(false);
   const [exchangeMessage, setExchangeMessage] = useState('');
   const [showExchangeModal, setShowExchangeModal] = useState(false);
+  const [wishlists, setWishlists] = useState<any[]>([]);
+  const [wishlistStatus, setWishlistStatus] = useState<{ is_in_wishlist: boolean; wishlists: any[] }>({
+    is_in_wishlist: false,
+    wishlists: []
+  });
+  const [showWishlistDropdown, setShowWishlistDropdown] = useState(false);
+  const [showNewWishlistModal, setShowNewWishlistModal] = useState(false);
+  const [newWishlistName, setNewWishlistName] = useState('');
+  const [newWishlistDesc, setNewWishlistDesc] = useState('');
+  const [creatingWishlist, setCreatingWishlist] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,6 +46,26 @@ const BookDetail = () => {
     };
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    if (user && id) {
+      fetchWishlistData();
+    }
+  }, [user, id]);
+
+  const fetchWishlistData = async () => {
+    if (!id) return;
+    try {
+      const [wishlistsRes, statusRes] = await Promise.all([
+        wishlistsAPI.getWishlists(),
+        wishlistsAPI.checkWishlistStatus(parseInt(id))
+      ]);
+      setWishlists(wishlistsRes.data);
+      setWishlistStatus(statusRes.data);
+    } catch (error) {
+      console.error('Failed to fetch wishlist data:', error);
+    }
+  };
 
   const handleExchange = async () => {
     if (!user || !book) return;
@@ -68,6 +98,41 @@ const BookDetail = () => {
       alert('添加笔记失败');
     } finally {
       setAddingNote(false);
+    }
+  };
+
+  const handleToggleWishlistItem = async (wishlistId: number) => {
+    if (!book) return;
+    const isInThisWishlist = wishlistStatus.wishlists.some(w => w.id === wishlistId);
+
+    try {
+      if (isInThisWishlist) {
+        await wishlistsAPI.removeFromWishlist(wishlistId, book.id);
+      } else {
+        await wishlistsAPI.addToWishlist(wishlistId, book.id);
+      }
+      fetchWishlistData();
+    } catch (err: any) {
+      console.error('Failed to toggle wishlist item:', err);
+    }
+  };
+
+  const handleCreateWishlist = async () => {
+    if (!newWishlistName.trim()) return;
+    try {
+      setCreatingWishlist(true);
+      const res = await wishlistsAPI.createWishlist(newWishlistName, newWishlistDesc);
+      if (book) {
+        await wishlistsAPI.addToWishlist(res.data.id, book.id);
+      }
+      setShowNewWishlistModal(false);
+      setNewWishlistName('');
+      setNewWishlistDesc('');
+      fetchWishlistData();
+    } catch (err: any) {
+      alert(err.response?.data?.error || '创建失败');
+    } finally {
+      setCreatingWishlist(false);
     }
   };
 
@@ -139,29 +204,96 @@ const BookDetail = () => {
 
             <p className="mt-6 text-gray-600 leading-relaxed">{book.description}</p>
 
-            <div className="mt-6 pt-6 border-t flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-primary-600" />
+            <div className="mt-6 pt-6 border-t">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-primary-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">当前持有者</p>
+                    <p className="font-medium text-book-ink">{book.holder_name}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">当前持有者</p>
-                  <p className="font-medium text-book-ink">{book.holder_name}</p>
-                </div>
+
+                {isOwner && (
+                  <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm">
+                    这本书在你的书架上
+                  </div>
+                )}
               </div>
 
-              {user && !isOwner && (
-                <button
-                  onClick={() => setShowExchangeModal(true)}
-                  className="bg-primary-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors"
-                >
-                  请求交换
-                </button>
-              )}
+              {user && (
+                <div className="flex items-center space-x-3 mt-4">
+                  {!isOwner && (
+                    <button
+                      onClick={() => setShowExchangeModal(true)}
+                      className="flex-1 bg-primary-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors"
+                    >
+                      请求交换
+                    </button>
+                  )}
 
-              {isOwner && (
-                <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm">
-                  这本书在你的书架上
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowWishlistDropdown(!showWishlistDropdown)}
+                      className={`flex items-center justify-center space-x-2 px-5 py-3 rounded-lg font-medium transition-colors ${
+                        wishlistStatus.is_in_wishlist
+                          ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Heart className={`w-5 h-5 ${wishlistStatus.is_in_wishlist ? 'fill-current' : ''}`} />
+                      <span>{wishlistStatus.is_in_wishlist ? '已收藏' : '收藏'}</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+
+                    {showWishlistDropdown && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
+                        <div className="p-3 border-b bg-gray-50">
+                          <p className="text-sm font-medium text-gray-700">添加到心愿单</p>
+                        </div>
+                        <div className="max-h-64 overflow-y-auto">
+                          {wishlists.length === 0 ? (
+                            <div className="p-4 text-center text-gray-400 text-sm">
+                              暂无心愿单
+                            </div>
+                          ) : (
+                            wishlists.map((wl: any) => {
+                              const isIn = wishlistStatus.wishlists.some(w => w.id === wl.id);
+                              return (
+                                <button
+                                  key={wl.id}
+                                  onClick={() => handleToggleWishlistItem(wl.id)}
+                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between transition-colors"
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <Heart className={`w-4 h-4 ${isIn ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
+                                    <span className={isIn ? 'text-primary-700 font-medium' : 'text-gray-700'}>
+                                      {wl.name}
+                                    </span>
+                                  </div>
+                                  {isIn && <Check className="w-4 h-4 text-primary-500" />}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                        <div className="p-3 border-t bg-gray-50">
+                          <button
+                            onClick={() => {
+                              setShowWishlistDropdown(false);
+                              setShowNewWishlistModal(true);
+                            }}
+                            className="w-full py-2 text-sm text-primary-600 hover:text-primary-700 flex items-center justify-center space-x-1"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>新建心愿单</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -286,6 +418,65 @@ const BookDetail = () => {
                 className="flex-1 bg-primary-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:opacity-50"
               >
                 {exchangeLoading ? '发送中...' : '确认请求'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewWishlistModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-book-ink">新建心愿单</h3>
+              <button
+                onClick={() => setShowNewWishlistModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  心愿单名称
+                </label>
+                <input
+                  type="text"
+                  value={newWishlistName}
+                  onChange={(e) => setNewWishlistName(e.target.value)}
+                  placeholder="例如：想读书单"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  maxLength={30}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  描述（选填）
+                </label>
+                <textarea
+                  value={newWishlistDesc}
+                  onChange={(e) => setNewWishlistDesc(e.target.value)}
+                  placeholder="描述一下这个心愿单..."
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
+                  rows={3}
+                  maxLength={100}
+                />
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowNewWishlistModal(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleCreateWishlist}
+                disabled={!newWishlistName.trim() || creatingWishlist}
+                className="flex-1 bg-primary-500 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:opacity-50"
+              >
+                {creatingWishlist ? '创建中...' : '创建并添加'}
               </button>
             </div>
           </div>

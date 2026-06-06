@@ -11,6 +11,7 @@ import Exchanges from './pages/Exchanges';
 import Topics from './pages/Topics';
 import PostDetail from './pages/PostDetail';
 import CreatePost from './pages/CreatePost';
+import Wishlists from './pages/Wishlists';
 
 function App() {
   const { loading } = useAuth();
@@ -38,6 +39,7 @@ function App() {
             <Route path="/books/:id" element={<BookDetail />} />
             <Route path="/add-book" element={<AddBook />} />
             <Route path="/my-books" element={<MyBooks />} />
+            <Route path="/wishlists" element={<Wishlists />} />
             <Route path="/exchanges" element={<Exchanges />} />
             <Route path="/topics" element={<Topics />} />
             <Route path="/topics/posts/:id" element={<PostDetail />} />

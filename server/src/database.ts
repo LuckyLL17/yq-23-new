@@ -111,6 +111,22 @@ interface CommentLike {
   created_at: string;
 }
 
+interface Wishlist {
+  id: number;
+  user_id: number;
+  name: string;
+  description?: string;
+  is_default?: boolean;
+  created_at: string;
+}
+
+interface WishlistItem {
+  id: number;
+  wishlist_id: number;
+  book_id: number;
+  created_at: string;
+}
+
 interface Data {
   users: User[];
   books: Book[];
@@ -122,6 +138,8 @@ interface Data {
   comments: Comment[];
   postLikes: PostLike[];
   commentLikes: CommentLike[];
+  wishlists: Wishlist[];
+  wishlistItems: WishlistItem[];
 }
 
 const defaultData: Data = {
@@ -134,7 +152,9 @@ const defaultData: Data = {
   posts: [],
   comments: [],
   postLikes: [],
-  commentLikes: []
+  commentLikes: [],
+  wishlists: [],
+  wishlistItems: []
 };
 
 const file = path.join(dataDir, 'db.json');
@@ -349,6 +369,19 @@ async function initDatabase() {
       { id: 1, comment_id: 1, user_id: 3, created_at: new Date().toISOString() },
       { id: 2, comment_id: 4, user_id: 3, created_at: new Date().toISOString() },
       { id: 3, comment_id: 5, user_id: 1, created_at: new Date().toISOString() }
+    ];
+
+    db.data.wishlists = [
+      { id: 1, user_id: 1, name: '默认心愿单', description: '我的收藏', is_default: true, created_at: new Date().toISOString() },
+      { id: 2, user_id: 1, name: '想读书单', description: '计划要读的书', is_default: false, created_at: new Date().toISOString() },
+      { id: 3, user_id: 2, name: '默认心愿单', description: '我的收藏', is_default: true, created_at: new Date().toISOString() }
+    ];
+
+    db.data.wishlistItems = [
+      { id: 1, wishlist_id: 1, book_id: 2, created_at: new Date().toISOString() },
+      { id: 2, wishlist_id: 1, book_id: 4, created_at: new Date().toISOString() },
+      { id: 3, wishlist_id: 2, book_id: 5, created_at: new Date().toISOString() },
+      { id: 4, wishlist_id: 3, book_id: 1, created_at: new Date().toISOString() }
     ];
 
     await db.write();

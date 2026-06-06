@@ -112,4 +112,22 @@ export const uploadAPI = {
   },
 };
 
+export const wishlistsAPI = {
+  getWishlists: () => api.get('/wishlists'),
+  createWishlist: (name: string, description?: string) =>
+    api.post('/wishlists', { name, description }),
+  getWishlist: (id: number) => api.get(`/wishlists/${id}`),
+  updateWishlist: (id: number, name?: string, description?: string) =>
+    api.put(`/wishlists/${id}`, { name, description }),
+  deleteWishlist: (id: number) => api.delete(`/wishlists/${id}`),
+  addToWishlist: (wishlistId: number, bookId: number) =>
+    api.post(`/wishlists/${wishlistId}/items`, { book_id: bookId }),
+  removeFromWishlist: (wishlistId: number, bookId: number) =>
+    api.delete(`/wishlists/${wishlistId}/items/${bookId}`),
+  checkWishlistStatus: (bookId: number) =>
+    api.get(`/wishlists/check/${bookId}`),
+  batchRemoveFromWishlist: (wishlistId: number, bookIds: number[]) =>
+    api.post(`/wishlists/${wishlistId}/items/batch-remove`, { book_ids: bookIds }),
+};
+
 export default api;

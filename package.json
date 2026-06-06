@@ -11,6 +11,9 @@
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "start": "cd server && npm start"
   },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
   "keywords": ["book", "exchange", "community", "second-hand"],
   "author": "",
   "license": "MIT"

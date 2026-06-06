@@ -11,6 +11,7 @@ import bookRoutes from './routes/books';
 import exchangeRoutes from './routes/exchanges';
 import topicRoutes from './routes/topics';
 import uploadRoutes from './routes/upload';
+import wishlistRoutes from './routes/wishlists';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -35,6 +36,7 @@ app.use('/api/books', bookRoutes);
 app.use('/api/exchanges', exchangeRoutes);
 app.use('/api/topics', topicRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/wishlists', wishlistRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Book Exchange API is running' });

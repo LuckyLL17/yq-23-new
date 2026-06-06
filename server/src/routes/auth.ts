@@ -34,6 +34,18 @@ router.post('/register', async (req, res) => {
   };
 
   db.data.users.push(newUser);
+
+  const defaultWishlistId = Math.max(0, ...db.data.wishlists.map(w => w.id)) + 1;
+  const defaultWishlist = {
+    id: defaultWishlistId,
+    user_id: newId,
+    name: '默认心愿单',
+    description: '我的收藏',
+    is_default: true,
+    created_at: new Date().toISOString()
+  };
+  db.data.wishlists.push(defaultWishlist);
+
   await db.write();
 
   const token = jwt.sign(
