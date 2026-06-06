@@ -114,6 +114,7 @@ const BookDetail = () => {
       fetchWishlistData();
     } catch (err: any) {
       console.error('Failed to toggle wishlist item:', err);
+      alert(err.response?.data?.error || '操作失败');
     }
   };
 

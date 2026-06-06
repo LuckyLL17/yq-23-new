@@ -94,16 +94,15 @@ router.get('/check/:bookId', authMiddleware, async (req: AuthRequest, res) => {
   const userWishlists = db.data.wishlists.filter(w => w.user_id === req.user!.id);
   const userWishlistIds = userWishlists.map(w => w.id);
 
-  const item = db.data.wishlistItems.find(
+  const items = db.data.wishlistItems.filter(
     i => userWishlistIds.includes(i.wishlist_id) && i.book_id === parseInt(bookId)
   );
 
-  const wishlistsWithBook = item
-    ? userWishlists.filter(w => w.id === item.wishlist_id)
-    : [];
+  const wishlistIdsWithBook = items.map(i => i.wishlist_id);
+  const wishlistsWithBook = userWishlists.filter(w => wishlistIdsWithBook.includes(w.id));
 
   res.json({
-    is_in_wishlist: !!item,
+    is_in_wishlist: items.length > 0,
     wishlists: wishlistsWithBook
   });
 });

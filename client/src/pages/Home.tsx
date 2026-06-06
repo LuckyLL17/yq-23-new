@@ -134,6 +134,7 @@ const Home = () => {
       }
     } catch (err: any) {
       console.error('Failed to toggle wishlist:', err);
+      alert(err.response?.data?.error || '操作失败');
     }
   };
 

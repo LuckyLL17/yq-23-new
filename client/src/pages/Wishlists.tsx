@@ -152,8 +152,9 @@ const Wishlists = () => {
           ? { ...w, book_count: w.book_count - selectedBooks.length }
           : w
       ));
-    } catch (error) {
-      console.error('Failed to remove books:', error);
+    } catch (err: any) {
+      console.error('Failed to remove books:', err);
+      alert(err.response?.data?.error || '批量移除失败');
     }
   };
 
@@ -168,8 +169,9 @@ const Wishlists = () => {
           ? { ...w, book_count: w.book_count - 1 }
           : w
       ));
-    } catch (error) {
-      console.error('Failed to remove book:', error);
+    } catch (err: any) {
+      console.error('Failed to remove book:', err);
+      alert(err.response?.data?.error || '移除失败');
     }
   };
 
