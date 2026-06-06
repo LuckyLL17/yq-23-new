@@ -167,6 +167,33 @@ interface UserAchievement {
   unlocked_at: string;
 }
 
+interface ReadingClub {
+  id: number;
+  title: string;
+  description: string;
+  book_title?: string;
+  book_id?: number;
+  organizer_id: number;
+  location: string;
+  location_lat?: number;
+  location_lng?: number;
+  start_time: string;
+  end_time: string;
+  max_participants: number;
+  status: 'upcoming' | 'ongoing' | 'ended' | 'cancelled';
+  cover_image?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ReadingClubParticipant {
+  id: number;
+  club_id: number;
+  user_id: number;
+  status: 'registered' | 'cancelled' | 'attended';
+  registered_at: string;
+}
+
 interface Data {
   users: User[];
   books: Book[];
@@ -184,6 +211,8 @@ interface Data {
   goalBooks: GoalBook[];
   achievements: Achievement[];
   userAchievements: UserAchievement[];
+  readingClubs: ReadingClub[];
+  readingClubParticipants: ReadingClubParticipant[];
 }
 
 const defaultData: Data = {
@@ -202,7 +231,9 @@ const defaultData: Data = {
   readingGoals: [],
   goalBooks: [],
   achievements: [],
-  userAchievements: []
+  userAchievements: [],
+  readingClubs: [],
+  readingClubParticipants: []
 };
 
 const file = path.join(dataDir, 'db.json');
@@ -476,6 +507,72 @@ async function initDatabase() {
       { id: 2, user_id: 1, achievement_id: 2, unlocked_at: new Date(Date.now() - 86400000 * 5).toISOString() },
       { id: 3, user_id: 1, achievement_id: 7, unlocked_at: new Date(Date.now() - 86400000 * 7).toISOString() },
       { id: 4, user_id: 1, achievement_id: 9, unlocked_at: new Date(Date.now() - 86400000 * 15).toISOString() }
+    ];
+
+    db.data.readingClubs = [
+      {
+        id: 1,
+        title: '《百年孤独》深度共读会',
+        description: '一起深度研读马尔克斯的魔幻现实主义经典《百年孤独》，探讨布恩迪亚家族的命运与孤独的主题。欢迎各位书友带着自己的见解来参加！',
+        book_title: '百年孤独',
+        book_id: 1,
+        organizer_id: 1,
+        location: '城市书房·南京路店',
+        location_lat: 31.2304,
+        location_lng: 121.4737,
+        start_time: new Date(Date.now() + 86400000 * 7).toISOString(),
+        end_time: new Date(Date.now() + 86400000 * 7 + 3600000 * 3).toISOString(),
+        max_participants: 20,
+        status: 'upcoming',
+        cover_image: 'https://picsum.photos/seed/bookclub1/800/400',
+        created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 3).toISOString()
+      },
+      {
+        id: 2,
+        title: '科幻迷的聚会：《三体》主题读书会',
+        description: '三体迷看过来！一起讨论刘慈欣的《三体》三部曲，从黑暗森林法则到降维打击，畅聊科幻世界的无限可能。',
+        book_title: '三体',
+        book_id: 2,
+        organizer_id: 2,
+        location: '时光咖啡馆·大学路店',
+        location_lat: 31.2975,
+        location_lng: 121.5036,
+        start_time: new Date(Date.now() + 86400000 * 3).toISOString(),
+        end_time: new Date(Date.now() + 86400000 * 3 + 3600000 * 2.5).toISOString(),
+        max_participants: 15,
+        status: 'upcoming',
+        cover_image: 'https://picsum.photos/seed/bookclub2/800/400',
+        created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 5).toISOString()
+      },
+      {
+        id: 3,
+        title: '文学经典：《活着》读书分享会',
+        description: '余华代表作《活着》深度分享，聊聊福贵的一生带给我们的思考。活动将有轮流分享和自由讨论环节。',
+        book_title: '活着',
+        book_id: 4,
+        organizer_id: 3,
+        location: '静安区图书馆·多功能厅',
+        location_lat: 31.2297,
+        location_lng: 121.4473,
+        start_time: new Date(Date.now() - 86400000 * 2).toISOString(),
+        end_time: new Date(Date.now() - 86400000 * 2 + 3600000 * 2).toISOString(),
+        max_participants: 30,
+        status: 'ended',
+        cover_image: 'https://picsum.photos/seed/bookclub3/800/400',
+        created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+        updated_at: new Date(Date.now() - 86400000 * 10).toISOString()
+      }
+    ];
+
+    db.data.readingClubParticipants = [
+      { id: 1, club_id: 1, user_id: 2, status: 'registered', registered_at: new Date(Date.now() - 86400000 * 2).toISOString() },
+      { id: 2, club_id: 1, user_id: 3, status: 'registered', registered_at: new Date(Date.now() - 86400000 * 1).toISOString() },
+      { id: 3, club_id: 2, user_id: 1, status: 'registered', registered_at: new Date(Date.now() - 86400000 * 3).toISOString() },
+      { id: 4, club_id: 2, user_id: 3, status: 'registered', registered_at: new Date(Date.now() - 86400000 * 2).toISOString() },
+      { id: 5, club_id: 3, user_id: 1, status: 'attended', registered_at: new Date(Date.now() - 86400000 * 8).toISOString() },
+      { id: 6, club_id: 3, user_id: 2, status: 'attended', registered_at: new Date(Date.now() - 86400000 * 7).toISOString() }
     ];
 
     await db.write();

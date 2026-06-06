@@ -14,6 +14,9 @@ import CreatePost from './pages/CreatePost';
 import Wishlists from './pages/Wishlists';
 import ReadingGoals from './pages/ReadingGoals';
 import Achievements from './pages/Achievements';
+import ReadingClubs from './pages/ReadingClubs';
+import ReadingClubDetail from './pages/ReadingClubDetail';
+import ReadingClubEdit from './pages/ReadingClubEdit';
 
 function App() {
   const { loading } = useAuth();
@@ -48,6 +51,9 @@ function App() {
             <Route path="/topics" element={<Topics />} />
             <Route path="/topics/posts/:id" element={<PostDetail />} />
             <Route path="/topics/new" element={<CreatePost />} />
+            <Route path="/reading-clubs" element={<ReadingClubs />} />
+            <Route path="/reading-clubs/:id" element={<ReadingClubDetail />} />
+            <Route path="/reading-clubs/:id/edit" element={<ReadingClubEdit />} />
           </Routes>
         </main>
       </div>

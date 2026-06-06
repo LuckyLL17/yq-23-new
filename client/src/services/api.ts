@@ -167,4 +167,48 @@ export const achievementsAPI = {
   getAchievementTypes: () => api.get('/achievements/types'),
 };
 
+export const readingClubsAPI = {
+  getClubs: (params?: {
+    status?: string;
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    limit?: number;
+  }) => api.get('/reading-clubs', { params }),
+  getMyClubs: () => api.get('/reading-clubs/mine'),
+  getClub: (id: number) => api.get(`/reading-clubs/${id}`),
+  createClub: (club: {
+    title: string;
+    description: string;
+    book_title?: string;
+    book_id?: number;
+    location: string;
+    location_lat?: number;
+    location_lng?: number;
+    start_time: string;
+    end_time: string;
+    max_participants: number;
+    cover_image?: string;
+  }) => api.post('/reading-clubs', club),
+  updateClub: (id: number, data: {
+    title?: string;
+    description?: string;
+    book_title?: string;
+    book_id?: number;
+    location?: string;
+    location_lat?: number;
+    location_lng?: number;
+    start_time?: string;
+    end_time?: string;
+    max_participants?: number;
+    status?: string;
+    cover_image?: string;
+  }) => api.put(`/reading-clubs/${id}`, data),
+  deleteClub: (id: number) => api.delete(`/reading-clubs/${id}`),
+  registerClub: (id: number) => api.post(`/reading-clubs/${id}/register`),
+  cancelRegistration: (id: number) => api.post(`/reading-clubs/${id}/cancel`),
+  getParticipants: (id: number) => api.get(`/reading-clubs/${id}/participants`),
+};
+
 export default api;
