@@ -46,14 +46,26 @@ interface DriftRecord {
   created_at: string;
 }
 
+type ExchangeStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'rejected' | 'cancelled' | 'expired';
+
 interface Exchange {
   id: number;
   book_id: number;
   requester_id: number;
   owner_id: number;
-  status: string;
+  status: ExchangeStatus;
   message?: string;
   created_at: string;
+  accepted_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  rejected_at?: string;
+  cancelled_at?: string;
+  expired_at?: string;
+  expires_at?: string;
+  borrow_days?: number;
+  owner_rated?: boolean;
+  requester_rated?: boolean;
 }
 
 interface SearchHistory {
@@ -194,6 +206,16 @@ interface ReadingClubParticipant {
   registered_at: string;
 }
 
+interface ExchangeReview {
+  id: number;
+  exchange_id: number;
+  reviewer_id: number;
+  reviewee_id: number;
+  rating: number;
+  comment?: string;
+  created_at: string;
+}
+
 interface Follow {
   id: number;
   follower_id: number;
@@ -206,6 +228,7 @@ interface Data {
   books: Book[];
   driftRecords: DriftRecord[];
   exchanges: Exchange[];
+  exchangeReviews: ExchangeReview[];
   searchHistories: SearchHistory[];
   topics: Topic[];
   posts: Post[];
@@ -228,6 +251,7 @@ const defaultData: Data = {
   books: [],
   driftRecords: [],
   exchanges: [],
+  exchangeReviews: [],
   searchHistories: [],
   topics: [],
   posts: [],

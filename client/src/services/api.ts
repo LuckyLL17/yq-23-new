@@ -52,10 +52,18 @@ export const booksAPI = {
 
 export const exchangesAPI = {
   getExchanges: () => api.get('/exchanges'),
-  requestExchange: (bookId: number, message?: string) =>
-    api.post('/exchanges', { book_id: bookId, message }),
+  getExchange: (id: number) => api.get(`/exchanges/${id}`),
+  requestExchange: (bookId: number, message?: string, borrowDays?: number) =>
+    api.post('/exchanges', { book_id: bookId, message, borrow_days: borrowDays }),
   acceptExchange: (id: number) => api.post(`/exchanges/${id}/accept`),
   rejectExchange: (id: number) => api.post(`/exchanges/${id}/reject`),
+  cancelExchange: (id: number) => api.post(`/exchanges/${id}/cancel`),
+  startExchange: (id: number) => api.post(`/exchanges/${id}/start`),
+  completeExchange: (id: number) => api.post(`/exchanges/${id}/complete`),
+  reviewExchange: (id: number, rating: number, comment?: string) =>
+    api.post(`/exchanges/${id}/review`, { rating, comment }),
+  getExchangeReviews: (id: number) => api.get(`/exchanges/${id}/reviews`),
+  getUserReviews: (userId: number) => api.get(`/exchanges/user/${userId}/reviews`),
 };
 
 export const topicsAPI = {

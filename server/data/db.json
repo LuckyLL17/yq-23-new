@@ -184,6 +184,7 @@
     }
   ],
   "exchanges": [],
+  "exchangeReviews": [],
   "searchHistories": [
     {
       "id": 1,
@@ -989,6 +990,12 @@
       "follower_id": 3,
       "following_id": 2,
       "created_at": "2026-06-04T00:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "follower_id": 1,
+      "following_id": 2,
+      "created_at": "2026-06-06T06:56:56.988Z"
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { User, Coins, BookOpen, MessageSquare, Users, Calendar, Heart, Eye } from 'lucide-react';
-import { usersAPI } from '../services/api';
+import { User, Coins, BookOpen, MessageSquare, Users, Calendar, Heart, Eye, Star } from 'lucide-react';
+import { usersAPI, exchangesAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const UserProfile = () => {
@@ -14,8 +14,13 @@ const UserProfile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isSelf, setIsSelf] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'posts' | 'books'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'books' | 'reviews'>('posts');
   const [followerCount, setFollowerCount] = useState(0);
+  const [reviewData, setReviewData] = useState<{ reviews: any[]; average_rating: number; review_count: number }>({
+    reviews: [],
+    average_rating: 0,
+    review_count: 0,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,15 +28,17 @@ const UserProfile = () => {
       try {
         setLoading(true);
         const userId = parseInt(id);
-        const [userRes, postsRes, booksRes] = await Promise.all([
+        const [userRes, postsRes, booksRes, reviewsRes] = await Promise.all([
           usersAPI.getUser(userId),
           usersAPI.getUserPosts(userId, { page: 1, limit: 20 }),
-          usersAPI.getUserBooks(userId)
+          usersAPI.getUserBooks(userId),
+          exchangesAPI.getUserReviews(userId)
         ]);
         setUser(userRes.data);
         setPosts(postsRes.data.posts);
         setBooks(booksRes.data);
         setFollowerCount(userRes.data.follower_count);
+        setReviewData(reviewsRes.data);
 
         if (currentUser) {
           if (currentUser.id === userId) {
@@ -200,6 +207,17 @@ const UserProfile = () => {
                 <span className="text-gray-500 text-sm ml-1">积分</span>
               </div>
             </div>
+            {reviewData.review_count > 0 && (
+              <div className="flex items-center space-x-2">
+                <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                <div>
+                  <span className="font-bold text-book-ink">{reviewData.average_rating}</span>
+                  <span className="text-gray-500 text-sm ml-1">
+                    ({reviewData.review_count}条评价)
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="flex items-center space-x-2">
               <Calendar className="w-5 h-5 text-gray-500" />
               <span className="text-gray-500 text-sm">
@@ -233,6 +251,17 @@ const UserProfile = () => {
           >
             <BookOpen className="w-5 h-5 inline-block mr-2" />
             书籍
+          </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+              activeTab === 'reviews'
+                ? 'text-primary-500 border-b-2 border-primary-500'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Star className="w-5 h-5 inline-block mr-2" />
+            评价
           </button>
         </div>
 
@@ -327,6 +356,86 @@ const UserProfile = () => {
                     <p className="text-gray-500 text-xs truncate">{book.author}</p>
                   </Link>
                 ))
+              )}
+            </div>
+          )}
+
+          {activeTab === 'reviews' && (
+            <div>
+              {reviewData.review_count === 0 ? (
+                <div className="text-center py-12">
+                  <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">暂无评价</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviewData.reviews.map((review: any) => (
+                    <div
+                      key={review.id}
+                      className="p-4 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center space-x-3">
+                          <Link
+                            to={`/users/${review.reviewer_id}`}
+                            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                          >
+                            <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
+                              {review.reviewer_avatar ? (
+                                <img
+                                  src={review.reviewer_avatar}
+                                  alt={review.reviewer_name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <User className="w-4 h-4 text-primary-600" />
+                              )}
+                            </div>
+                            <span className="font-medium text-book-ink text-sm">
+                              {review.reviewer_name}
+                            </span>
+                          </Link>
+                        </div>
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < review.rating
+                                  ? 'text-amber-400 fill-amber-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p className="text-gray-600 text-sm mt-2">
+                          {review.comment}
+                        </p>
+                      )}
+                      {(review.book_title || review.book_cover) && (
+                        <div className="flex items-center mt-3 pt-3 border-t border-gray-200">
+                          {review.book_cover && (
+                            <img
+                              src={review.book_cover}
+                              alt={review.book_title}
+                              className="w-8 h-12 object-cover rounded mr-2"
+                            />
+                          )}
+                          <span className="text-xs text-gray-500">
+                            交换书籍：{review.book_title}
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">
+                        {new Date(review.created_at).toLocaleDateString(
+                          'zh-CN'
+                        )}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
