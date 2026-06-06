@@ -10,9 +10,12 @@ interface BookCardProps {
     points_required: number;
     holder_name?: string;
     category?: string;
+    status?: string;
+    holder_id?: number;
   };
   showWishlist?: boolean;
   isInWishlist?: boolean;
+  isLookingFor?: boolean;
   onWishlistClick?: (bookId: number) => void;
 }
 
@@ -20,6 +23,7 @@ const BookCard: React.FC<BookCardProps> = ({
   book,
   showWishlist = false,
   isInWishlist = false,
+  isLookingFor = false,
   onWishlistClick
 }) => {
   const handleWishlistClick = (e: React.MouseEvent) => {
@@ -63,11 +67,19 @@ const BookCard: React.FC<BookCardProps> = ({
             </button>
           )}
         </div>
-        {book.category && (
-          <div className="absolute top-3 left-3 bg-primary-500 text-white px-2 py-1 rounded-lg text-xs">
-            {book.category}
-          </div>
-        )}
+        <div className="absolute top-3 left-3 flex flex-col items-start space-y-2">
+          {book.category && (
+            <div className="bg-primary-500 text-white px-2 py-1 rounded-lg text-xs">
+              {book.category}
+            </div>
+          )}
+          {isLookingFor && (
+            <div className="bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-medium flex items-center space-x-1">
+              <Heart className="w-3 h-3 fill-current" />
+              <span>你正在找</span>
+            </div>
+          )}
+        </div>
       </div>
       <div className="p-4">
         <h3 className="font-semibold text-book-ink truncate text-lg">{book.title}</h3>

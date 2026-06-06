@@ -164,141 +164,149 @@ const BookDetail = () => {
         <span>返回</span>
       </button>
 
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="md:flex">
-          <div className="md:w-1/3 bg-gray-100 p-8 flex items-center justify-center">
-            {book.cover ? (
-              <img
-                src={book.cover}
-                alt={book.title}
-                className="max-w-full max-h-80 object-contain shadow-lg rounded-lg"
-              />
-            ) : (
-              <div className="w-48 h-72 bg-gradient-to-br from-primary-200 to-primary-300 rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-6xl">📖</span>
-              </div>
-            )}
-          </div>
-          <div className="md:w-2/3 p-8">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-book-ink font-serif">{book.title}</h1>
-                <p className="text-xl text-gray-600 mt-2">{book.author}</p>
-              </div>
-              <div className="flex items-center space-x-2 bg-amber-50 px-4 py-2 rounded-lg">
-                <Coins className="w-6 h-6 text-amber-500" />
-                <span className="text-2xl font-bold text-amber-700">{book.points_required}</span>
-              </div>
-            </div>
-
-            {book.category && (
-              <div className="mt-4">
-                <span className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm">
-                  {book.category}
-                </span>
-                <span className="ml-2 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
-                  {book.condition}
-                </span>
-              </div>
-            )}
-
-            <p className="mt-6 text-gray-600 leading-relaxed">{book.description}</p>
-
-            <div className="mt-6 pt-6 border-t">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">当前持有者</p>
-                    <p className="font-medium text-book-ink">{book.holder_name}</p>
-                  </div>
-                </div>
-
-                {isOwner && (
-                  <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm">
-                    这本书在你的书架上
-                  </div>
-                )}
-              </div>
-
-              {user && (
-                <div className="flex items-center space-x-3 mt-4">
-                  {!isOwner && (
-                    <button
-                      onClick={() => setShowExchangeModal(true)}
-                      className="flex-1 bg-primary-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors"
-                    >
-                      请求交换
-                    </button>
-                  )}
-
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowWishlistDropdown(!showWishlistDropdown)}
-                      className={`flex items-center justify-center space-x-2 px-5 py-3 rounded-lg font-medium transition-colors ${
-                        wishlistStatus.is_in_wishlist
-                          ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      <Heart className={`w-5 h-5 ${wishlistStatus.is_in_wishlist ? 'fill-current' : ''}`} />
-                      <span>{wishlistStatus.is_in_wishlist ? '已收藏' : '收藏'}</span>
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-
-                    {showWishlistDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
-                        <div className="p-3 border-b bg-gray-50">
-                          <p className="text-sm font-medium text-gray-700">添加到心愿单</p>
-                        </div>
-                        <div className="max-h-64 overflow-y-auto">
-                          {wishlists.length === 0 ? (
-                            <div className="p-4 text-center text-gray-400 text-sm">
-                              暂无心愿单
-                            </div>
-                          ) : (
-                            wishlists.map((wl: any) => {
-                              const isIn = wishlistStatus.wishlists.some(w => w.id === wl.id);
-                              return (
-                                <button
-                                  key={wl.id}
-                                  onClick={() => handleToggleWishlistItem(wl.id)}
-                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between transition-colors"
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <Heart className={`w-4 h-4 ${isIn ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
-                                    <span className={isIn ? 'text-primary-700 font-medium' : 'text-gray-700'}>
-                                      {wl.name}
-                                    </span>
-                                  </div>
-                                  {isIn && <Check className="w-4 h-4 text-primary-500" />}
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                        <div className="p-3 border-t bg-gray-50">
-                          <button
-                            onClick={() => {
-                              setShowWishlistDropdown(false);
-                              setShowNewWishlistModal(true);
-                            }}
-                            className="w-full py-2 text-sm text-primary-600 hover:text-primary-700 flex items-center justify-center space-x-1"
-                          >
-                            <Plus className="w-4 h-4" />
-                            <span>新建心愿单</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+      <div className="relative">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="md:flex">
+            <div className="md:w-1/3 bg-gray-100 p-8 flex items-center justify-center">
+              {book.cover ? (
+                <img
+                  src={book.cover}
+                  alt={book.title}
+                  className="max-w-full max-h-80 object-contain shadow-lg rounded-lg"
+                />
+              ) : (
+                <div className="w-48 h-72 bg-gradient-to-br from-primary-200 to-primary-300 rounded-lg flex items-center justify-center shadow-lg">
+                  <span className="text-6xl">📖</span>
                 </div>
               )}
             </div>
+            <div className="md:w-2/3 p-8">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-book-ink font-serif">{book.title}</h1>
+                  <p className="text-xl text-gray-600 mt-2">{book.author}</p>
+                </div>
+                <div className="flex items-center space-x-2 bg-amber-50 px-4 py-2 rounded-lg">
+                  <Coins className="w-6 h-6 text-amber-500" />
+                  <span className="text-2xl font-bold text-amber-700">{book.points_required}</span>
+                </div>
+              </div>
+
+              {book.category && (
+                <div className="mt-4">
+                  <span className="bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm">
+                    {book.category}
+                  </span>
+                  <span className="ml-2 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
+                    {book.condition}
+                  </span>
+                </div>
+              )}
+
+              <p className="mt-6 text-gray-600 leading-relaxed">{book.description}</p>
+
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">当前持有者</p>
+                      <p className="font-medium text-book-ink">{book.holder_name}</p>
+                    </div>
+                  </div>
+
+                  {isOwner && (
+                    <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm">
+                      这本书在你的书架上
+                    </div>
+                  )}
+                </div>
+
+                {user && (
+                  <div className="flex items-center space-x-3 mt-4">
+                    {!isOwner && (
+                      <button
+                        onClick={() => setShowExchangeModal(true)}
+                        className="flex-1 bg-primary-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors"
+                      >
+                        请求交换
+                      </button>
+                    )}
+
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowWishlistDropdown(!showWishlistDropdown)}
+                        className={`flex items-center justify-center space-x-2 px-5 py-3 rounded-lg font-medium transition-colors ${
+                          wishlistStatus.is_in_wishlist
+                            ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <Heart className={`w-5 h-5 ${wishlistStatus.is_in_wishlist ? 'fill-current' : ''}`} />
+                        <span>{wishlistStatus.is_in_wishlist ? '已收藏' : '收藏'}</span>
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+
+        {showWishlistDropdown && user && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setShowWishlistDropdown(false)}
+            />
+            <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
+              <div className="p-3 border-b bg-gray-50">
+                <p className="text-sm font-medium text-gray-700">添加到心愿单</p>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {wishlists.length === 0 ? (
+                  <div className="p-4 text-center text-gray-400 text-sm">
+                    暂无心愿单
+                  </div>
+                ) : (
+                  wishlists.map((wl: any) => {
+                    const isIn = wishlistStatus.wishlists.some(w => w.id === wl.id);
+                    return (
+                      <button
+                        key={wl.id}
+                        onClick={() => handleToggleWishlistItem(wl.id)}
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between transition-colors"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Heart className={`w-4 h-4 ${isIn ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
+                          <span className={isIn ? 'text-primary-700 font-medium' : 'text-gray-700'}>
+                            {wl.name}
+                          </span>
+                        </div>
+                        {isIn && <Check className="w-4 h-4 text-primary-500" />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              <div className="p-3 border-t bg-gray-50">
+                <button
+                  onClick={() => {
+                    setShowWishlistDropdown(false);
+                    setShowNewWishlistModal(true);
+                  }}
+                  className="w-full py-2 text-sm text-primary-600 hover:text-primary-700 flex items-center justify-center space-x-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>新建心愿单</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-lg p-8">

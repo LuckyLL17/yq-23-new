@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Coins, BookOpen, Sparkles, Filter, X, Clock, ChevronDown, Heart } from 'lucide-react';
+import { Search, Coins, BookOpen, Sparkles, Filter, X, Clock, ChevronDown } from 'lucide-react';
 import { booksAPI, wishlistsAPI } from '../services/api';
 import BookCard from '../components/BookCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,6 +25,7 @@ const Home = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [searchHistory, setSearchHistory] = useState<any[]>([]);
   const [wishlistBookIds, setWishlistBookIds] = useState<number[]>([]);
+  const [lookingForBookIds, setLookingForBookIds] = useState<number[]>([]);
   const [defaultWishlistId, setDefaultWishlistId] = useState<number | null>(null);
   
   const [filters, setFilters] = useState({
@@ -62,6 +63,7 @@ const Home = () => {
       fetchWishlistData();
     } else {
       setWishlistBookIds([]);
+      setLookingForBookIds([]);
       setDefaultWishlistId(null);
     }
   }, [user]);
@@ -84,15 +86,20 @@ const Home = () => {
         setDefaultWishlistId(defaultList.id);
         
         const allBookIds: number[] = [];
+        const lookingForIds: number[] = [];
         for (const wl of wishlists) {
           const detailRes = await wishlistsAPI.getWishlist(wl.id);
           detailRes.data.books.forEach((b: any) => {
             if (!allBookIds.includes(b.id)) {
               allBookIds.push(b.id);
             }
+            if (b.is_looking_for && !lookingForIds.includes(b.id)) {
+              lookingForIds.push(b.id);
+            }
           });
         }
         setWishlistBookIds(allBookIds);
+        setLookingForBookIds(lookingForIds);
       }
     } catch (error) {
       console.error('Failed to fetch wishlist data:', error);
@@ -116,9 +123,14 @@ const Home = () => {
       if (isInWishlist) {
         await wishlistsAPI.removeFromWishlist(defaultWishlistId, bookId);
         setWishlistBookIds(wishlistBookIds.filter(id => id !== bookId));
+        setLookingForBookIds(lookingForBookIds.filter(id => id !== bookId));
       } else {
         await wishlistsAPI.addToWishlist(defaultWishlistId, bookId);
         setWishlistBookIds([...wishlistBookIds, bookId]);
+        const book = books.find(b => b.id === bookId);
+        if (book && book.status === 'available' && book.current_holder_id !== user.id) {
+          setLookingForBookIds([...lookingForBookIds, bookId]);
+        }
       }
     } catch (err: any) {
       console.error('Failed to toggle wishlist:', err);
@@ -443,6 +455,7 @@ const Home = () => {
                 book={book}
                 showWishlist={!!user}
                 isInWishlist={wishlistBookIds.includes(book.id)}
+                isLookingFor={lookingForBookIds.includes(book.id)}
                 onWishlistClick={handleToggleWishlist}
               />
             </Link>
