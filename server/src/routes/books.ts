@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import db from '../database';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { authMiddleware, AuthRequest, optionalAuthMiddleware } from '../middleware/auth';
 import { fuzzyMatch, getMatchScore } from '../utils/searchUtils';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
+router.get('/', optionalAuthMiddleware, async (req: AuthRequest, res) => {
   const { 
     category, 
     search, 
@@ -16,12 +16,24 @@ router.get('/', async (req, res) => {
     start_date,
     end_date,
     sort_by,
-    sort_order
+    sort_order,
+    approval_status
   } = req.query;
   
   await db.read();
   
   let books = [...db.data.books];
+
+  const currentUserId = req.user?.id;
+  const isOwnerFilter = owner_id !== undefined;
+
+  if (!approval_status && !isOwnerFilter) {
+    books = books.filter(b => b.approval_status === 'approved');
+  }
+
+  if (approval_status) {
+    books = books.filter(b => b.approval_status === approval_status);
+  }
 
   if (category) {
     books = books.filter(b => b.category === category);
@@ -220,18 +232,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
     condition,
     owner_id: req.user.id,
     current_holder_id: req.user.id,
-    status: 'available',
+    status: 'available' as const,
+    approval_status: 'pending' as const,
     points_required: points,
     created_at: new Date().toISOString()
   };
 
   db.data.books.push(newBook);
-  
-  const user = db.data.users.find(u => u.id === req.user!.id);
-  if (user) {
-    user.points += points;
-  }
-  
+
   await db.write();
 
   res.status(201).json(newBook);
@@ -275,7 +283,8 @@ router.post('/batch', authMiddleware, async (req: AuthRequest, res) => {
       condition,
       owner_id: req.user.id,
       current_holder_id: req.user.id,
-      status: 'available',
+      status: 'available' as const,
+      approval_status: 'pending' as const,
       points_required: points,
       created_at: new Date().toISOString()
     };
@@ -286,17 +295,12 @@ router.post('/batch', authMiddleware, async (req: AuthRequest, res) => {
 
   db.data.books.push(...newBooks);
 
-  const user = db.data.users.find(u => u.id === req.user!.id);
-  if (user) {
-    user.points += totalPoints;
-  }
-
   await db.write();
 
   res.status(201).json({
     created: newBooks.length,
     books: newBooks,
-    total_points_earned: totalPoints
+    total_points_pending: totalPoints
   });
 });
 
@@ -407,7 +411,7 @@ router.get('/export', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuthMiddleware, async (req: AuthRequest, res) => {
   const { id } = req.params;
 
   await db.read();
@@ -415,6 +419,12 @@ router.get('/:id', async (req, res) => {
 
   if (!book) {
     return res.status(404).json({ error: 'Book not found' });
+  }
+
+  if (book.approval_status !== 'approved') {
+    if (!req.user || (req.user.id !== book.owner_id && req.user.role !== 'admin')) {
+      return res.status(403).json({ error: 'Book is not approved yet' });
+    }
   }
 
   const owner = db.data.users.find(u => u.id === book.owner_id);

@@ -30,6 +30,8 @@ router.post('/register', async (req, res) => {
     email,
     password: hashedPassword,
     points: 100,
+    role: 'user' as const,
+    status: 'active' as const,
     created_at: new Date().toISOString()
   };
 
@@ -49,7 +51,7 @@ router.post('/register', async (req, res) => {
   await db.write();
 
   const token = jwt.sign(
-    { id: newId, username, email },
+    { id: newId, username, email, role: 'user' },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -61,6 +63,8 @@ router.post('/register', async (req, res) => {
       username, 
       email, 
       points: 100,
+      role: 'user',
+      status: 'active',
       avatar: undefined,
       bio: undefined,
       reading_tags: [],
@@ -84,8 +88,12 @@ router.post('/login', async (req, res) => {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
+  if (user.status === 'banned') {
+    return res.status(403).json({ error: 'Account is banned' });
+  }
+
   const token = jwt.sign(
-    { id: user.id, username: user.username, email: user.email },
+    { id: user.id, username: user.username, email: user.email, role: user.role },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -97,6 +105,8 @@ router.post('/login', async (req, res) => {
       username: user.username,
       email: user.email,
       points: user.points,
+      role: user.role,
+      status: user.status,
       avatar: user.avatar,
       bio: user.bio,
       reading_tags: user.reading_tags || [],
@@ -118,11 +128,17 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
+  if (user.status === 'banned') {
+    return res.status(403).json({ error: 'Account is banned' });
+  }
+
   res.json({
     id: user.id,
     username: user.username,
     email: user.email,
     points: user.points,
+    role: user.role,
+    status: user.status,
     avatar: user.avatar,
     bio: user.bio,
     reading_tags: user.reading_tags || [],

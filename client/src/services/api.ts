@@ -308,4 +308,85 @@ export const donationsAPI = {
   getDonationCertificate: (id: number) => api.get(`/donations/${id}/certificate`),
 };
 
+export const adminAPI = {
+  getStats: () => api.get('/admin/stats'),
+
+  getBooks: (params?: {
+    approval_status?: string;
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    page_size?: number;
+  }) => api.get('/admin/books', { params }),
+
+  approveBook: (id: number) => api.post(`/admin/books/${id}/approve`),
+
+  rejectBook: (id: number, reason?: string) =>
+    api.post(`/admin/books/${id}/reject`, { reason }),
+
+  updateBook: (id: number, data: any) => api.put(`/admin/books/${id}`, data),
+
+  deleteBook: (id: number) => api.delete(`/admin/books/${id}`),
+
+  getUsers: (params?: {
+    search?: string;
+    status?: string;
+    role?: string;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    page_size?: number;
+  }) => api.get('/admin/users', { params }),
+
+  banUser: (id: number, reason?: string) =>
+    api.put(`/admin/users/${id}/ban`, { reason }),
+
+  unbanUser: (id: number) => api.put(`/admin/users/${id}/unban`),
+
+  updateUserRole: (id: number, role: string) =>
+    api.put(`/admin/users/${id}/role`, { role }),
+
+  updateUserPoints: (id: number, points: number, reason?: string) =>
+    api.put(`/admin/users/${id}/points`, { points, reason }),
+
+  getExchanges: (params?: {
+    status?: string;
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    page_size?: number;
+  }) => api.get('/admin/exchanges', { params }),
+
+  getPosts: (params?: {
+    search?: string;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    page_size?: number;
+  }) => api.get('/admin/posts', { params }),
+
+  deletePost: (id: number) => api.delete(`/admin/posts/${id}`),
+
+  getDonations: (params?: {
+    status?: string;
+    page?: number;
+    page_size?: number;
+  }) => api.get('/admin/donations', { params }),
+
+  approveDonation: (id: number) => api.post(`/admin/donations/${id}/approve`),
+
+  rejectDonation: (id: number, reason?: string) =>
+    api.post(`/admin/donations/${id}/reject`, { reason }),
+
+  getReadingClubs: (params?: {
+    status?: string;
+    page?: number;
+    page_size?: number;
+  }) => api.get('/admin/reading-clubs', { params }),
+
+  deleteReadingClub: (id: number) => api.delete(`/admin/reading-clubs/${id}`),
+};
+
 export default api;

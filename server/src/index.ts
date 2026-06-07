@@ -18,6 +18,7 @@ import readingClubRoutes from './routes/reading-clubs';
 import userRoutes from './routes/users';
 import statsRoutes from './routes/stats';
 import donationRoutes from './routes/donations';
+import adminRoutes from './routes/admin';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,6 +50,7 @@ app.use('/api/reading-clubs', readingClubRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/donations', donationRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Book Exchange API is running' });

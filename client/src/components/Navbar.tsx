@@ -106,6 +106,16 @@ const Navbar = () => {
                   交换请求
                 </Link>
 
+                {user.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors flex items-center space-x-1"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>管理后台</span>
+                  </Link>
+                )}
+
                 <Link
                   to="/add-book"
                   className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors flex items-center space-x-1"

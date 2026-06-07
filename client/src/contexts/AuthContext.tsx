@@ -8,6 +8,8 @@ interface User {
   points: number;
   avatar?: string;
   bio?: string;
+  role: 'user' | 'admin';
+  status: 'active' | 'banned';
   reading_tags?: string[];
   expertise_fields?: string[];
   shelf_style?: string;

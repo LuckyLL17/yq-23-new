@@ -2,31 +2,47 @@
   "users": [
     {
       "id": 1,
-      "username": "booklover",
-      "email": "booklover@example.com",
-      "password": "$2a$10$O3J0iA3ps9t1lQvrz3PBneyoR2ftxE5x/kQ2d5mU9D0KVAptLUXwu",
-      "points": 250,
-      "bio": "热爱阅读，喜欢分享好书",
-      "created_at": "2026-06-05T08:18:23.178Z",
-      "shelf_style": "grid"
+      "username": "admin",
+      "email": "admin@example.com",
+      "password": "$2a$10$IesnNVxP5BIUoTg4SkHLVOUoM4d.4l/MRqpH3REHDMz61hIgPatC2",
+      "points": 999,
+      "role": "admin",
+      "status": "active",
+      "bio": "系统管理员",
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
-      "username": "reader123",
-      "email": "reader@example.com",
-      "password": "$2a$10$O3J0iA3ps9t1lQvrz3PBneyoR2ftxE5x/kQ2d5mU9D0KVAptLUXwu",
-      "points": 80,
-      "bio": "书虫一枚，各种类型都读",
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "username": "booklover",
+      "email": "booklover@example.com",
+      "password": "$2a$10$JweLS./Ht2tRQBAbeXXo3eTwFIhcFHGVIeoEF7IJ48pdREzNvQhqy",
+      "points": 150,
+      "role": "user",
+      "status": "active",
+      "bio": "热爱阅读，喜欢分享好书",
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 3,
+      "username": "reader123",
+      "email": "reader@example.com",
+      "password": "$2a$10$JweLS./Ht2tRQBAbeXXo3eTwFIhcFHGVIeoEF7IJ48pdREzNvQhqy",
+      "points": 80,
+      "role": "user",
+      "status": "active",
+      "bio": "书虫一枚，各种类型都读",
+      "created_at": "2026-06-07T01:46:57.151Z"
+    },
+    {
+      "id": 4,
       "username": "bibliophile",
       "email": "biblio@example.com",
-      "password": "$2a$10$O3J0iA3ps9t1lQvrz3PBneyoR2ftxE5x/kQ2d5mU9D0KVAptLUXwu",
+      "password": "$2a$10$JweLS./Ht2tRQBAbeXXo3eTwFIhcFHGVIeoEF7IJ48pdREzNvQhqy",
       "points": 200,
+      "role": "user",
+      "status": "active",
       "bio": "藏书爱好者，愿意与大家分享",
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "books": [
@@ -38,11 +54,14 @@
       "description": "魔幻现实主义文学代表作，讲述布恩迪亚家族七代人的传奇故事",
       "category": "文学",
       "condition": "九成新",
-      "owner_id": 1,
-      "current_holder_id": 1,
+      "owner_id": 2,
+      "current_holder_id": 2,
       "status": "available",
+      "approval_status": "approved",
+      "reviewed_by": 1,
+      "reviewed_at": "2026-06-07T01:46:57.151Z",
       "points_required": 15,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
@@ -52,11 +71,14 @@
       "description": "中国科幻里程碑之作，展现宇宙级别的文明冲突",
       "category": "科幻",
       "condition": "全新",
-      "owner_id": 2,
-      "current_holder_id": 2,
+      "owner_id": 3,
+      "current_holder_id": 3,
       "status": "available",
+      "approval_status": "approved",
+      "reviewed_by": 1,
+      "reviewed_at": "2026-06-07T01:46:57.151Z",
       "points_required": 20,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 3,
@@ -64,13 +86,16 @@
       "author": "安托万·德·圣-埃克苏佩里",
       "cover": "https://picsum.photos/seed/book3/200/300",
       "description": "写给大人的童话，关于爱与责任的寓言",
-      "category": "文学",
-      "condition": "九成新",
-      "owner_id": 1,
-      "current_holder_id": 1,
+      "category": "童话",
+      "condition": "八成新",
+      "owner_id": 2,
+      "current_holder_id": 2,
       "status": "available",
+      "approval_status": "approved",
+      "reviewed_by": 1,
+      "reviewed_at": "2026-06-07T01:46:57.151Z",
       "points_required": 8,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 4,
@@ -80,11 +105,14 @@
       "description": "讲述一个人和他的命运之间的友情",
       "category": "文学",
       "condition": "九成新",
-      "owner_id": 3,
-      "current_holder_id": 3,
+      "owner_id": 4,
+      "current_holder_id": 4,
       "status": "available",
+      "approval_status": "approved",
+      "reviewed_by": 1,
+      "reviewed_at": "2026-06-07T01:46:57.151Z",
       "points_required": 12,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 5,
@@ -94,83 +122,14 @@
       "description": "从认知革命到科学革命，重新审视人类历史",
       "category": "历史",
       "condition": "全新",
-      "owner_id": 2,
-      "current_holder_id": 2,
+      "owner_id": 3,
+      "current_holder_id": 3,
       "status": "available",
+      "approval_status": "approved",
+      "reviewed_by": 1,
+      "reviewed_at": "2026-06-07T01:46:57.151Z",
       "points_required": 18,
-      "created_at": "2026-06-05T08:18:23.180Z"
-    },
-    {
-      "id": 6,
-      "title": "1111",
-      "author": "111",
-      "cover": "/uploads/img-1780673009094-436467182.png",
-      "description": "阿斯顿发多少发多少分",
-      "isbn": "大撒的撒的",
-      "category": "文学",
-      "condition": "九成新",
-      "owner_id": 1,
-      "current_holder_id": 1,
-      "status": "available",
-      "points_required": 10,
-      "created_at": "2026-06-05T15:23:32.367Z"
-    },
-    {
-      "id": 7,
-      "title": "阿斯顿发多少分",
-      "author": "发生的阿斯顿发s d f",
-      "cover": "/uploads/img-1780673025512-89501016.png",
-      "description": " 阿凡达大撒发",
-      "isbn": "上的发水淀粉水淀粉",
-      "category": "文学",
-      "condition": "九成新",
-      "owner_id": 1,
-      "current_holder_id": 1,
-      "status": "available",
-      "points_required": 10,
-      "created_at": "2026-06-05T15:23:49.958Z"
-    },
-    {
-      "id": 8,
-      "title": "暗示法发多少",
-      "author": "多少分撒发生的f s d",
-      "cover": "/uploads/img-1780673608951-188826337.png",
-      "description": "",
-      "isbn": "分撒发多少发多少分",
-      "category": "文学",
-      "condition": "九成新",
-      "owner_id": 1,
-      "current_holder_id": 1,
-      "status": "available",
-      "points_required": 10,
-      "created_at": "2026-06-05T15:33:30.224Z"
-    },
-    {
-      "id": 9,
-      "title": "测试书籍1",
-      "author": "测试作者1",
-      "description": "这是一本测试书",
-      "category": "文学",
-      "condition": "九成新",
-      "owner_id": 1,
-      "current_holder_id": 1,
-      "status": "available",
-      "points_required": 12,
-      "created_at": "2026-06-06T10:29:16.727Z",
-      "cover": "",
-      "isbn": ""
-    },
-    {
-      "id": 10,
-      "title": "测试书籍2",
-      "author": "测试作者2",
-      "category": "文学",
-      "condition": "九成新",
-      "owner_id": 1,
-      "current_holder_id": 1,
-      "status": "available",
-      "points_required": 8,
-      "created_at": "2026-06-06T10:29:16.727Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "driftRecords": [
@@ -181,7 +140,7 @@
       "notes": "这是我读过最震撼的小说，魔幻与现实交织得如此美妙",
       "rating": 5,
       "read_date": "2024-01-15",
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
@@ -190,7 +149,7 @@
       "notes": "布恩迪亚家族的命运让人唏嘘，好书值得反复阅读",
       "rating": 5,
       "read_date": "2024-03-20",
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 3,
@@ -199,7 +158,7 @@
       "notes": "想象力爆炸！三体世界的设定太精彩了",
       "rating": 5,
       "read_date": "2024-02-10",
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 4,
@@ -208,19 +167,12 @@
       "notes": "余华的文字朴实但有力量，读完思考了很久人生",
       "rating": 4,
       "read_date": "2024-04-05",
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "exchanges": [],
   "exchangeReviews": [],
-  "searchHistories": [
-    {
-      "id": 1,
-      "user_id": 1,
-      "keyword": "11",
-      "created_at": "2026-06-05T14:26:08.463Z"
-    }
-  ],
+  "searchHistories": [],
   "topics": [
     {
       "id": 1,
@@ -228,7 +180,7 @@
       "description": "分享你的读书心得和感悟",
       "icon": "📚",
       "post_count": 3,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
@@ -236,7 +188,7 @@
       "description": "好书推荐和深度书评",
       "icon": "⭐",
       "post_count": 2,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 3,
@@ -244,7 +196,7 @@
       "description": "二手书交换、买卖信息",
       "icon": "🔄",
       "post_count": 1,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 4,
@@ -252,7 +204,7 @@
       "description": "每日读书打卡，记录成长",
       "icon": "📅",
       "post_count": 1,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 5,
@@ -260,7 +212,7 @@
       "description": "讨论文学作品与作家",
       "icon": "✍️",
       "post_count": 0,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "posts": [
@@ -276,11 +228,11 @@
       "images": [
         "https://picsum.photos/seed/post1/800/400"
       ],
-      "view_count": 139,
+      "view_count": 128,
       "like_count": 15,
-      "comment_count": 4,
-      "created_at": "2026-06-03T08:18:23.180Z",
-      "updated_at": "2026-06-03T08:18:23.180Z"
+      "comment_count": 3,
+      "created_at": "2026-06-05T01:46:57.151Z",
+      "updated_at": "2026-06-05T01:46:57.151Z"
     },
     {
       "id": 2,
@@ -294,11 +246,11 @@
       "images": [
         "https://picsum.photos/seed/scifi/600/300"
       ],
-      "view_count": 259,
+      "view_count": 256,
       "like_count": 32,
-      "comment_count": 6,
-      "created_at": "2026-06-04T08:18:23.180Z",
-      "updated_at": "2026-06-04T08:18:23.180Z"
+      "comment_count": 5,
+      "created_at": "2026-06-06T01:46:57.151Z",
+      "updated_at": "2026-06-06T01:46:57.151Z"
     },
     {
       "id": 3,
@@ -312,8 +264,8 @@
       "view_count": 89,
       "like_count": 8,
       "comment_count": 2,
-      "created_at": "2026-06-05T03:18:23.180Z",
-      "updated_at": "2026-06-05T03:18:23.180Z"
+      "created_at": "2026-06-06T20:46:57.151Z",
+      "updated_at": "2026-06-06T20:46:57.151Z"
     },
     {
       "id": 4,
@@ -324,11 +276,11 @@
         4
       ],
       "images": [],
-      "view_count": 83,
-      "like_count": 13,
-      "comment_count": 3,
-      "created_at": "2026-06-05T06:18:23.180Z",
-      "updated_at": "2026-06-05T06:18:23.180Z"
+      "view_count": 67,
+      "like_count": 12,
+      "comment_count": 1,
+      "created_at": "2026-06-06T23:46:57.151Z",
+      "updated_at": "2026-06-06T23:46:57.151Z"
     },
     {
       "id": 5,
@@ -345,64 +297,8 @@
       "view_count": 198,
       "like_count": 28,
       "comment_count": 4,
-      "created_at": "2026-06-02T08:18:23.180Z",
-      "updated_at": "2026-06-02T08:18:23.180Z"
-    },
-    {
-      "id": 6,
-      "title": "sa的dasd阿斯顿",
-      "content": "## 党纪国法说的话给粉丝都很过分很大方\n### 飞机阿富汗解放后是克己奉公的时光\n粉丝看到了回复健康水淀粉即可上飞机上的话可说的风景画上开发\n\n![图片](https://img0.baidu.com/it/u=3032708709,479037656&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=750)",
-      "author_id": 4,
-      "topic_ids": [],
-      "images": [],
-      "view_count": 2,
-      "like_count": 1,
-      "comment_count": 0,
-      "created_at": "2026-06-05T14:32:07.641Z",
-      "updated_at": "2026-06-05T14:32:07.641Z"
-    },
-    {
-      "id": 7,
-      "title": "范围发发多少f d s f",
-      "content": "安德森发多少分的",
-      "author_id": 1,
-      "topic_ids": [],
-      "images": [
-        "/uploads/img-1780673072771-396434916.png"
-      ],
-      "view_count": 1,
-      "like_count": 0,
-      "comment_count": 0,
-      "created_at": "2026-06-05T15:24:35.984Z",
-      "updated_at": "2026-06-05T15:24:35.984Z"
-    },
-    {
-      "id": 8,
-      "title": "大声点撒的",
-      "content": "大撒的撒的\n\n![图片](/uploads/img-1780673087354-289650825.png)",
-      "author_id": 1,
-      "topic_ids": [],
-      "images": [],
-      "view_count": 3,
-      "like_count": 0,
-      "comment_count": 0,
-      "created_at": "2026-06-05T15:24:48.918Z",
-      "updated_at": "2026-06-05T15:24:48.918Z"
-    },
-    {
-      "id": 9,
-      "title": "发大水f da s f",
-      "content": "的撒发生的发生的\n\n![图片](/uploads/img-1780673618956-919263311.png)",
-      "author_id": 1,
-      "topic_ids": [],
-      "images": [
-        "/uploads/img-1780673623257-781011237.png"
-      ],
-      "view_count": 3,
-      "like_count": 0,
-      "comment_count": 0,
-      "created_at": "2026-06-05T15:33:44.308Z",
-      "updated_at": "2026-06-05T15:33:44.308Z"
+      "created_at": "2026-06-04T01:46:57.151Z",
+      "updated_at": "2026-06-04T01:46:57.151Z"
     }
   ],
   "comments": [
@@ -413,7 +309,7 @@
       "content": "写得太好了！马尔克斯的文字真的有魔力，这本书我也读了三遍，每次都有新的感悟。",
       "parent_id": null,
       "like_count": 5,
-      "created_at": "2026-06-04T08:18:23.180Z"
+      "created_at": "2026-06-06T01:46:57.151Z"
     },
     {
       "id": 2,
@@ -422,7 +318,7 @@
       "content": "同感，孤独是这本书永恒的主题。不过我觉得乌尔苏拉才是全书最坚强的人。",
       "parent_id": null,
       "like_count": 3,
-      "created_at": "2026-06-04T10:18:23.180Z"
+      "created_at": "2026-06-06T06:34:57.151Z"
     },
     {
       "id": 3,
@@ -432,7 +328,7 @@
       "parent_id": 2,
       "reply_to_user_id": 3,
       "like_count": 2,
-      "created_at": "2026-06-04T12:18:23.180Z"
+      "created_at": "2026-06-06T13:46:57.151Z"
     },
     {
       "id": 4,
@@ -441,7 +337,7 @@
       "content": "我也喜欢三体！黑暗森林法则真的是天才级的设定，太震撼了。",
       "parent_id": null,
       "like_count": 8,
-      "created_at": "2026-06-04T12:18:23.180Z"
+      "created_at": "2026-06-06T15:46:57.151Z"
     },
     {
       "id": 5,
@@ -450,7 +346,7 @@
       "content": "第二部《黑暗森林》是巅峰！罗辑的人设太酷了，从浪子到面壁者的转变。",
       "parent_id": null,
       "like_count": 12,
-      "created_at": "2026-06-04T14:18:23.180Z"
+      "created_at": "2026-06-06T17:46:57.151Z"
     },
     {
       "id": 6,
@@ -460,7 +356,7 @@
       "parent_id": 5,
       "reply_to_user_id": 3,
       "like_count": 4,
-      "created_at": "2026-06-04T16:18:23.180Z"
+      "created_at": "2026-06-06T19:46:57.151Z"
     },
     {
       "id": 7,
@@ -470,7 +366,7 @@
       "parent_id": 5,
       "reply_to_user_id": 3,
       "like_count": 3,
-      "created_at": "2026-06-04T18:18:23.180Z"
+      "created_at": "2026-06-06T21:46:57.151Z"
     },
     {
       "id": 8,
@@ -479,7 +375,7 @@
       "content": "有兴趣！《活着》和《平凡的世界》我都想看，我有一些东野圭吾的书可以换",
       "parent_id": null,
       "like_count": 1,
-      "created_at": "2026-06-05T05:18:23.180Z"
+      "created_at": "2026-06-06T22:46:57.151Z"
     },
     {
       "id": 9,
@@ -488,7 +384,7 @@
       "content": "《围城》还有吗？我想用《白夜行》换",
       "parent_id": null,
       "like_count": 2,
-      "created_at": "2026-06-05T06:18:23.180Z"
+      "created_at": "2026-06-06T23:46:57.151Z"
     },
     {
       "id": 10,
@@ -496,8 +392,8 @@
       "author_id": 2,
       "content": "好棒！一起打卡呀～我也在坚持读书",
       "parent_id": null,
-      "like_count": 4,
-      "created_at": "2026-06-05T07:18:23.180Z"
+      "like_count": 3,
+      "created_at": "2026-06-07T00:46:57.151Z"
     },
     {
       "id": 11,
@@ -506,7 +402,7 @@
       "content": "说得好！余华用最朴素的语言讲了最沉重的故事",
       "parent_id": null,
       "like_count": 6,
-      "created_at": "2026-06-03T10:18:23.180Z"
+      "created_at": "2026-06-05T01:46:57.151Z"
     },
     {
       "id": 12,
@@ -515,7 +411,7 @@
       "content": "《活着》确实经典，我推荐给好多朋友了，都说好。",
       "parent_id": null,
       "like_count": 4,
-      "created_at": "2026-06-03T14:18:23.180Z"
+      "created_at": "2026-06-05T13:46:57.151Z"
     },
     {
       "id": 13,
@@ -525,7 +421,7 @@
       "parent_id": 12,
       "reply_to_user_id": 2,
       "like_count": 2,
-      "created_at": "2026-06-04T08:18:23.180Z"
+      "created_at": "2026-06-06T01:46:57.151Z"
     },
     {
       "id": 14,
@@ -535,45 +431,7 @@
       "parent_id": 13,
       "reply_to_user_id": 3,
       "like_count": 1,
-      "created_at": "2026-06-04T12:18:23.180Z"
-    },
-    {
-      "id": 15,
-      "post_id": 1,
-      "author_id": 1,
-      "content": "这本书真的很赞，我也很喜欢马尔克斯的风格！",
-      "parent_id": null,
-      "like_count": 0,
-      "created_at": "2026-06-05T14:18:20.967Z"
-    },
-    {
-      "id": 16,
-      "post_id": 4,
-      "author_id": 1,
-      "content": "1111",
-      "parent_id": null,
-      "like_count": 0,
-      "created_at": "2026-06-05T14:27:49.265Z"
-    },
-    {
-      "id": 17,
-      "post_id": 4,
-      "author_id": 4,
-      "content": "1111",
-      "parent_id": 16,
-      "reply_to_user_id": 1,
-      "like_count": 0,
-      "created_at": "2026-06-05T14:30:59.522Z"
-    },
-    {
-      "id": 18,
-      "post_id": 2,
-      "author_id": 1,
-      "content": "好红红火火",
-      "parent_id": 5,
-      "reply_to_user_id": 1,
-      "like_count": 0,
-      "created_at": "2026-06-05T14:55:39.631Z"
+      "created_at": "2026-06-06T13:46:57.151Z"
     }
   ],
   "postLikes": [
@@ -581,61 +439,49 @@
       "id": 1,
       "post_id": 1,
       "user_id": 2,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
       "post_id": 1,
       "user_id": 3,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
+    },
+    {
+      "id": 3,
+      "post_id": 2,
+      "user_id": 1,
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 4,
       "post_id": 2,
       "user_id": 3,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 5,
       "post_id": 3,
       "user_id": 1,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 6,
       "post_id": 4,
       "user_id": 2,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 7,
       "post_id": 5,
       "user_id": 1,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 8,
       "post_id": 5,
       "user_id": 2,
-      "created_at": "2026-06-05T08:18:23.180Z"
-    },
-    {
-      "id": 9,
-      "post_id": 4,
-      "user_id": 1,
-      "created_at": "2026-06-05T14:27:03.270Z"
-    },
-    {
-      "id": 10,
-      "post_id": 6,
-      "user_id": 1,
-      "created_at": "2026-06-05T14:51:19.470Z"
-    },
-    {
-      "id": 11,
-      "post_id": 2,
-      "user_id": 1,
-      "created_at": "2026-06-05T14:54:39.688Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "commentLikes": [
@@ -643,25 +489,19 @@
       "id": 1,
       "comment_id": 1,
       "user_id": 3,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
       "comment_id": 4,
       "user_id": 3,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 3,
       "comment_id": 5,
       "user_id": 1,
-      "created_at": "2026-06-05T08:18:23.180Z"
-    },
-    {
-      "id": 4,
-      "comment_id": 10,
-      "user_id": 1,
-      "created_at": "2026-06-05T14:28:54.104Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "wishlists": [
@@ -671,7 +511,7 @@
       "name": "默认心愿单",
       "description": "我的收藏",
       "is_default": true,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
@@ -679,7 +519,7 @@
       "name": "想读书单",
       "description": "计划要读的书",
       "is_default": false,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 3,
@@ -687,15 +527,7 @@
       "name": "默认心愿单",
       "description": "我的收藏",
       "is_default": true,
-      "created_at": "2026-06-05T08:18:23.180Z"
-    },
-    {
-      "id": 4,
-      "user_id": 1,
-      "name": "11",
-      "description": "131232",
-      "is_default": false,
-      "created_at": "2026-06-06T03:27:02.854Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "wishlistItems": [
@@ -703,37 +535,31 @@
       "id": 1,
       "wishlist_id": 1,
       "book_id": 2,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
       "wishlist_id": 1,
       "book_id": 4,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 3,
       "wishlist_id": 2,
       "book_id": 5,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 4,
       "wishlist_id": 3,
       "book_id": 1,
-      "created_at": "2026-06-05T08:18:23.180Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
-      "id": 6,
-      "wishlist_id": 4,
-      "book_id": 4,
-      "created_at": "2026-06-06T03:27:03.032Z"
-    },
-    {
-      "id": 7,
-      "wishlist_id": 2,
-      "book_id": 4,
-      "created_at": "2026-06-06T03:38:28.497Z"
+      "id": 5,
+      "wishlist_id": 1,
+      "book_id": 5,
+      "created_at": "2026-06-07T01:52:50.681Z"
     }
   ],
   "readingGoals": [
@@ -743,21 +569,10 @@
       "title": "六月阅读计划",
       "description": "本月目标读完4本书",
       "target_books": 4,
-      "start_date": "2026-06-01T00:00:00.000Z",
-      "end_date": "2026-06-30T23:59:59.999Z",
-      "status": "completed",
-      "created_at": "2026-06-01T00:00:00.000Z"
-    },
-    {
-      "id": 2,
-      "user_id": 1,
-      "title": "112",
-      "description": "2132132",
-      "target_books": 5,
-      "start_date": "2026-06-04T00:00:00.000Z",
-      "end_date": "2026-06-02T00:00:00.000Z",
-      "status": "completed",
-      "created_at": "2026-06-06T05:51:51.685Z"
+      "start_date": "2026-05-31T16:00:00.000Z",
+      "end_date": "2026-06-29T16:00:00.000Z",
+      "status": "active",
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "goalBooks": [
@@ -766,72 +581,23 @@
       "goal_id": 1,
       "book_id": 1,
       "is_completed": true,
-      "completed_at": "2026-06-02T00:00:00.000Z",
-      "added_at": "2026-05-28T00:00:00.000Z"
+      "completed_at": "2026-06-02T01:46:57.151Z",
+      "added_at": "2026-05-28T01:46:57.151Z"
     },
     {
       "id": 2,
       "goal_id": 1,
       "book_id": 2,
       "is_completed": true,
-      "completed_at": "2026-06-04T00:00:00.000Z",
-      "added_at": "2026-05-30T00:00:00.000Z"
+      "completed_at": "2026-06-04T01:46:57.151Z",
+      "added_at": "2026-05-30T01:46:57.151Z"
     },
     {
       "id": 3,
       "goal_id": 1,
       "book_id": 3,
-      "is_completed": true,
-      "added_at": "2026-06-03T00:00:00.000Z",
-      "completed_at": "2026-06-06T04:52:33.070Z"
-    },
-    {
-      "id": 4,
-      "goal_id": 1,
-      "book_id": 4,
-      "is_completed": true,
-      "added_at": "2026-06-06T04:54:09.481Z",
-      "completed_at": "2026-06-06T04:54:09.496Z"
-    },
-    {
-      "id": 5,
-      "goal_id": 2,
-      "book_id": 4,
-      "is_completed": true,
-      "added_at": "2026-06-06T05:52:02.410Z",
-      "completed_at": "2026-06-06T05:52:34.843Z"
-    },
-    {
-      "id": 6,
-      "goal_id": 2,
-      "book_id": 1,
-      "is_completed": true,
-      "added_at": "2026-06-06T05:52:06.920Z",
-      "completed_at": "2026-06-06T05:52:34.299Z"
-    },
-    {
-      "id": 7,
-      "goal_id": 2,
-      "book_id": 6,
-      "is_completed": true,
-      "added_at": "2026-06-06T05:52:08.916Z",
-      "completed_at": "2026-06-06T05:52:33.260Z"
-    },
-    {
-      "id": 8,
-      "goal_id": 2,
-      "book_id": 8,
-      "is_completed": true,
-      "added_at": "2026-06-06T05:52:17.359Z",
-      "completed_at": "2026-06-06T05:52:32.389Z"
-    },
-    {
-      "id": 9,
-      "goal_id": 2,
-      "book_id": 5,
-      "is_completed": true,
-      "added_at": "2026-06-06T05:52:18.852Z",
-      "completed_at": "2026-06-06T05:52:31.636Z"
+      "is_completed": false,
+      "added_at": "2026-06-05T01:46:57.151Z"
     }
   ],
   "achievements": [
@@ -844,7 +610,7 @@
       "condition_type": "books_read",
       "condition_value": 1,
       "points_reward": 10,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 2,
@@ -855,7 +621,7 @@
       "condition_type": "books_read",
       "condition_value": 5,
       "points_reward": 30,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 3,
@@ -866,7 +632,7 @@
       "condition_type": "books_read",
       "condition_value": 10,
       "points_reward": 50,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 4,
@@ -877,7 +643,7 @@
       "condition_type": "books_read",
       "condition_value": 20,
       "points_reward": 100,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 5,
@@ -888,7 +654,7 @@
       "condition_type": "goals_completed",
       "condition_value": 1,
       "points_reward": 20,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 6,
@@ -899,7 +665,7 @@
       "condition_type": "goals_completed",
       "condition_value": 5,
       "points_reward": 60,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 7,
@@ -910,7 +676,7 @@
       "condition_type": "posts_made",
       "condition_value": 1,
       "points_reward": 5,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 8,
@@ -921,7 +687,7 @@
       "condition_type": "posts_made",
       "condition_value": 10,
       "points_reward": 40,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 9,
@@ -932,7 +698,7 @@
       "condition_type": "books_added",
       "condition_value": 1,
       "points_reward": 10,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 10,
@@ -943,7 +709,7 @@
       "condition_type": "books_added",
       "condition_value": 10,
       "points_reward": 50,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 11,
@@ -954,7 +720,7 @@
       "condition_type": "exchange_count",
       "condition_value": 1,
       "points_reward": 15,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     },
     {
       "id": 12,
@@ -965,7 +731,7 @@
       "condition_type": "exchange_count",
       "condition_value": 5,
       "points_reward": 80,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-07T01:46:57.151Z"
     }
   ],
   "userAchievements": [
@@ -973,31 +739,125 @@
       "id": 1,
       "user_id": 1,
       "achievement_id": 1,
-      "unlocked_at": "2026-06-02T00:00:00.000Z"
+      "unlocked_at": "2026-05-28T01:46:57.151Z"
     },
     {
       "id": 2,
       "user_id": 1,
       "achievement_id": 2,
-      "unlocked_at": "2026-06-05T00:00:00.000Z"
+      "unlocked_at": "2026-06-02T01:46:57.151Z"
     },
     {
       "id": 3,
       "user_id": 1,
       "achievement_id": 7,
-      "unlocked_at": "2026-06-03T00:00:00.000Z"
+      "unlocked_at": "2026-05-31T01:46:57.151Z"
     },
     {
       "id": 4,
       "user_id": 1,
       "achievement_id": 9,
-      "unlocked_at": "2026-06-01T00:00:00.000Z"
+      "unlocked_at": "2026-05-23T01:46:57.151Z"
+    }
+  ],
+  "readingClubs": [
+    {
+      "id": 1,
+      "title": "《百年孤独》深度共读会",
+      "description": "一起深度研读马尔克斯的魔幻现实主义经典《百年孤独》，探讨布恩迪亚家族的命运与孤独的主题。欢迎各位书友带着自己的见解来参加！",
+      "book_title": "百年孤独",
+      "book_id": 1,
+      "organizer_id": 1,
+      "location": "城市书房·南京路店",
+      "location_lat": 31.2304,
+      "location_lng": 121.4737,
+      "start_time": "2026-06-14T01:46:57.151Z",
+      "end_time": "2026-06-14T04:46:57.151Z",
+      "max_participants": 20,
+      "status": "upcoming",
+      "cover_image": "https://picsum.photos/seed/bookclub1/800/400",
+      "created_at": "2026-06-04T01:46:57.151Z",
+      "updated_at": "2026-06-04T01:46:57.151Z"
+    },
+    {
+      "id": 2,
+      "title": "科幻迷的聚会：《三体》主题读书会",
+      "description": "三体迷看过来！一起讨论刘慈欣的《三体》三部曲，从黑暗森林法则到降维打击，畅聊科幻世界的无限可能。",
+      "book_title": "三体",
+      "book_id": 2,
+      "organizer_id": 2,
+      "location": "时光咖啡馆·大学路店",
+      "location_lat": 31.2975,
+      "location_lng": 121.5036,
+      "start_time": "2026-06-10T01:46:57.151Z",
+      "end_time": "2026-06-10T04:16:57.151Z",
+      "max_participants": 15,
+      "status": "upcoming",
+      "cover_image": "https://picsum.photos/seed/bookclub2/800/400",
+      "created_at": "2026-06-02T01:46:57.151Z",
+      "updated_at": "2026-06-02T01:46:57.151Z"
+    },
+    {
+      "id": 3,
+      "title": "文学经典：《活着》读书分享会",
+      "description": "余华代表作《活着》深度分享，聊聊福贵的一生带给我们的思考。活动将有轮流分享和自由讨论环节。",
+      "book_title": "活着",
+      "book_id": 4,
+      "organizer_id": 3,
+      "location": "静安区图书馆·多功能厅",
+      "location_lat": 31.2297,
+      "location_lng": 121.4473,
+      "start_time": "2026-06-05T01:46:57.151Z",
+      "end_time": "2026-06-05T03:46:57.151Z",
+      "max_participants": 30,
+      "status": "ended",
+      "cover_image": "https://picsum.photos/seed/bookclub3/800/400",
+      "created_at": "2026-05-28T01:46:57.151Z",
+      "updated_at": "2026-05-28T01:46:57.151Z"
+    }
+  ],
+  "readingClubParticipants": [
+    {
+      "id": 1,
+      "club_id": 1,
+      "user_id": 2,
+      "status": "registered",
+      "registered_at": "2026-06-05T01:46:57.151Z"
+    },
+    {
+      "id": 2,
+      "club_id": 1,
+      "user_id": 3,
+      "status": "registered",
+      "registered_at": "2026-06-06T01:46:57.151Z"
+    },
+    {
+      "id": 3,
+      "club_id": 2,
+      "user_id": 1,
+      "status": "registered",
+      "registered_at": "2026-06-04T01:46:57.151Z"
+    },
+    {
+      "id": 4,
+      "club_id": 2,
+      "user_id": 3,
+      "status": "registered",
+      "registered_at": "2026-06-05T01:46:57.151Z"
     },
     {
       "id": 5,
+      "club_id": 3,
       "user_id": 1,
-      "achievement_id": 5,
-      "unlocked_at": "2026-06-06T04:54:09.497Z"
+      "status": "attended",
+      "registered_at": "2026-05-30T01:46:57.151Z"
+    },
+    {
+      "id": 6,
+      "club_id": 3,
+      "user_id": 2,
+      "status": "attended",
+      "registered_at": "2026-05-31T01:46:57.151Z"
     }
   ],
   "follows": [
@@ -1005,25 +865,25 @@
       "id": 1,
       "follower_id": 2,
       "following_id": 1,
-      "created_at": "2026-06-01T00:00:00.000Z"
+      "created_at": "2026-06-02T01:46:57.151Z"
     },
     {
       "id": 2,
       "follower_id": 3,
       "following_id": 1,
-      "created_at": "2026-06-02T00:00:00.000Z"
+      "created_at": "2026-06-03T01:46:57.151Z"
+    },
+    {
+      "id": 3,
+      "follower_id": 1,
+      "following_id": 2,
+      "created_at": "2026-06-04T01:46:57.151Z"
     },
     {
       "id": 4,
       "follower_id": 3,
       "following_id": 2,
-      "created_at": "2026-06-04T00:00:00.000Z"
-    },
-    {
-      "id": 5,
-      "follower_id": 1,
-      "following_id": 2,
-      "created_at": "2026-06-06T06:56:56.988Z"
+      "created_at": "2026-06-05T01:46:57.151Z"
     }
   ],
   "donations": [],
