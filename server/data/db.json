@@ -5,9 +5,10 @@
       "username": "booklover",
       "email": "booklover@example.com",
       "password": "$2a$10$O3J0iA3ps9t1lQvrz3PBneyoR2ftxE5x/kQ2d5mU9D0KVAptLUXwu",
-      "points": 200,
+      "points": 250,
       "bio": "热爱阅读，喜欢分享好书",
-      "created_at": "2026-06-05T08:18:23.178Z"
+      "created_at": "2026-06-05T08:18:23.178Z",
+      "shelf_style": "grid"
     },
     {
       "id": 2,
@@ -63,8 +64,8 @@
       "author": "安托万·德·圣-埃克苏佩里",
       "cover": "https://picsum.photos/seed/book3/200/300",
       "description": "写给大人的童话，关于爱与责任的寓言",
-      "category": "童话",
-      "condition": "八成新",
+      "category": "文学",
+      "condition": "九成新",
       "owner_id": 1,
       "current_holder_id": 1,
       "status": "available",
@@ -106,7 +107,7 @@
       "cover": "/uploads/img-1780673009094-436467182.png",
       "description": "阿斯顿发多少发多少分",
       "isbn": "大撒的撒的",
-      "category": "科幻",
+      "category": "文学",
       "condition": "九成新",
       "owner_id": 1,
       "current_holder_id": 1,
@@ -121,7 +122,7 @@
       "cover": "/uploads/img-1780673025512-89501016.png",
       "description": " 阿凡达大撒发",
       "isbn": "上的发水淀粉水淀粉",
-      "category": "",
+      "category": "文学",
       "condition": "九成新",
       "owner_id": 1,
       "current_holder_id": 1,
@@ -136,13 +137,40 @@
       "cover": "/uploads/img-1780673608951-188826337.png",
       "description": "",
       "isbn": "分撒发多少发多少分",
-      "category": "",
+      "category": "文学",
       "condition": "九成新",
       "owner_id": 1,
       "current_holder_id": 1,
       "status": "available",
       "points_required": 10,
       "created_at": "2026-06-05T15:33:30.224Z"
+    },
+    {
+      "id": 9,
+      "title": "测试书籍1",
+      "author": "测试作者1",
+      "description": "这是一本测试书",
+      "category": "文学",
+      "condition": "九成新",
+      "owner_id": 1,
+      "current_holder_id": 1,
+      "status": "available",
+      "points_required": 12,
+      "created_at": "2026-06-06T10:29:16.727Z",
+      "cover": "",
+      "isbn": ""
+    },
+    {
+      "id": 10,
+      "title": "测试书籍2",
+      "author": "测试作者2",
+      "category": "文学",
+      "condition": "九成新",
+      "owner_id": 1,
+      "current_holder_id": 1,
+      "status": "available",
+      "points_required": 8,
+      "created_at": "2026-06-06T10:29:16.727Z"
     }
   ],
   "driftRecords": [
@@ -997,5 +1025,7 @@
       "following_id": 2,
       "created_at": "2026-06-06T06:56:56.988Z"
     }
-  ]
+  ],
+  "donations": [],
+  "donationCertificates": []
 }

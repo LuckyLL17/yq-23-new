@@ -266,4 +266,46 @@ export const statsAPI = {
     api.get(`/stats/export?format=${format}`, { responseType: 'blob' }),
 };
 
+export const donationsAPI = {
+  createDonation: (data: {
+    book_id?: number;
+    book_title: string;
+    book_author: string;
+    book_cover?: string;
+    book_category?: string;
+    book_condition: string;
+    quantity?: number;
+    message?: string;
+  }) => api.post('/donations', data),
+
+  getMyDonations: (params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+    sort_by?: string;
+    sort_order?: string;
+  }) => api.get('/donations/mine', { params }),
+
+  getDonations: (params?: {
+    user_id?: number;
+    status?: string;
+    page?: number;
+    limit?: number;
+    sort_by?: string;
+    sort_order?: string;
+  }) => api.get('/donations', { params }),
+
+  getDonationRanking: (params?: {
+    type?: string;
+    period?: string;
+    limit?: number;
+  }) => api.get('/donations/ranking', { params }),
+
+  getDonationStats: () => api.get('/donations/stats'),
+
+  getDonation: (id: number) => api.get(`/donations/${id}`),
+
+  getDonationCertificate: (id: number) => api.get(`/donations/${id}/certificate`),
+};
+
 export default api;

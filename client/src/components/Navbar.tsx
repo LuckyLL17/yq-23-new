@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Coins, Plus, BookCopy, User, LogOut, MessageSquare, Heart, Target, Award, Users, Sparkles, BarChart3, Settings } from 'lucide-react';
+import { BookOpen, Coins, Plus, BookCopy, User, LogOut, MessageSquare, Heart, Target, Award, Users, Sparkles, BarChart3, Settings, Gift, Trophy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Navbar = () => {
@@ -73,6 +73,22 @@ const Navbar = () => {
                 >
                   <Award className="w-4 h-4" />
                   <span>成就墙</span>
+                </Link>
+
+                <Link
+                  to="/donations/ranking"
+                  className="text-book-ink hover:text-primary-500 transition-colors flex items-center space-x-1"
+                >
+                  <Trophy className="w-4 h-4" />
+                  <span>捐赠榜</span>
+                </Link>
+
+                <Link
+                  to="/donations/records"
+                  className="text-book-ink hover:text-primary-500 transition-colors flex items-center space-x-1"
+                >
+                  <Gift className="w-4 h-4" />
+                  <span>我的捐赠</span>
                 </Link>
 
                 <Link

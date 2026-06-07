@@ -24,6 +24,10 @@ import UserFollowList from './pages/UserFollowList';
 import FollowingFeed from './pages/FollowingFeed';
 import ReadingStats from './pages/ReadingStats';
 import ProfileSettings from './pages/ProfileSettings';
+import DonateBook from './pages/DonateBook';
+import DonationRecords from './pages/DonationRecords';
+import DonationRanking from './pages/DonationRanking';
+import DonationCertificate from './pages/DonationCertificate';
 
 function App() {
   const { loading } = useAuth();
@@ -69,6 +73,10 @@ function App() {
             <Route path="/users/:id/following" element={<UserFollowList type="following" />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />
             <Route path="/following" element={<FollowingFeed />} />
+            <Route path="/donate" element={<DonateBook />} />
+            <Route path="/donations/records" element={<DonationRecords />} />
+            <Route path="/donations/ranking" element={<DonationRanking />} />
+            <Route path="/donations/:id/certificate" element={<DonationCertificate />} />
           </Routes>
         </main>
       </div>

@@ -223,6 +223,32 @@ interface Follow {
   created_at: string;
 }
 
+interface Donation {
+  id: number;
+  user_id: number;
+  book_id: number | null;
+  book_title: string;
+  book_author: string;
+  book_cover?: string;
+  book_category?: string;
+  book_condition: string;
+  quantity: number;
+  message?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  donated_at: string;
+  reviewed_at?: string;
+  reviewed_by?: number;
+  certificate_issued?: boolean;
+}
+
+interface DonationCertificate {
+  id: number;
+  donation_id: number;
+  user_id: number;
+  certificate_no: string;
+  issued_at: string;
+}
+
 interface Data {
   users: User[];
   books: Book[];
@@ -244,6 +270,8 @@ interface Data {
   readingClubs: ReadingClub[];
   readingClubParticipants: ReadingClubParticipant[];
   follows: Follow[];
+  donations: Donation[];
+  donationCertificates: DonationCertificate[];
 }
 
 const defaultData: Data = {
@@ -266,7 +294,9 @@ const defaultData: Data = {
   userAchievements: [],
   readingClubs: [],
   readingClubParticipants: [],
-  follows: []
+  follows: [],
+  donations: [],
+  donationCertificates: []
 };
 
 const file = path.join(dataDir, 'db.json');
