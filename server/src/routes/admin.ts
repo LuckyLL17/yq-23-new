@@ -1,6 +1,156 @@
 import { Router } from 'express';
-import db from '../database';
+import db, { User, Book, Exchange, Post, Donation, ReadingClub } from '../database';
 import { adminMiddleware, AuthRequest } from '../middleware/auth';
+import { success, created, badRequest, unauthorized, forbidden, notFound } from '../utils/response';
+import { validate, validateIdParam, validatePagination } from '../middleware/validate';
+
+interface StatsResponse {
+  totalUsers: number;
+  totalBooks: number;
+  totalExchanges: number;
+  totalPosts: number;
+  pendingBooks: number;
+  pendingDonations: number;
+  activeUsers: number;
+  bannedUsers: number;
+  booksByCategory: Record<string, number>;
+  exchangesByStatus: Record<string, number>;
+}
+
+interface BookWithOwner extends Book {
+  owner_name?: string;
+  owner_email?: string;
+}
+
+interface PaginatedBooksResponse {
+  books: BookWithOwner[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+interface RejectBookBody {
+  reason: string;
+}
+
+interface UpdateBookBody {
+  title?: string;
+  author?: string;
+  cover?: string;
+  description?: string;
+  isbn?: string;
+  category?: string;
+  condition?: string;
+  points_required?: number;
+  status?: string;
+}
+
+interface UserWithStats {
+  id: number;
+  username: string;
+  email: string;
+  points: number;
+  role: string;
+  status: string;
+  avatar?: string;
+  bio?: string;
+  created_at: string;
+  book_count: number;
+  exchange_count: number;
+}
+
+interface PaginatedUsersResponse {
+  users: UserWithStats[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+interface BanUserBody {
+  reason?: string;
+}
+
+interface UpdateUserRoleBody {
+  role: string;
+}
+
+interface UpdateUserPointsBody {
+  points: number;
+  reason?: string;
+}
+
+interface ExchangeWithDetails extends Exchange {
+  book_title?: string;
+  book_cover?: string;
+  requester_name?: string;
+  owner_name?: string;
+}
+
+interface PaginatedExchangesResponse {
+  exchanges: ExchangeWithDetails[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+interface PostWithAuthor extends Post {
+  author_name?: string;
+}
+
+interface PaginatedPostsResponse {
+  posts: PostWithAuthor[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+interface DonationWithUser extends Donation {
+  username?: string;
+  user_email?: string;
+}
+
+interface PaginatedDonationsResponse {
+  donations: DonationWithUser[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+interface RejectDonationBody {
+  reason?: string;
+}
+
+interface ReadingClubWithDetails extends ReadingClub {
+  organizer_name?: string;
+  participant_count: number;
+}
+
+interface PaginatedReadingClubsResponse {
+  clubs: ReadingClubWithDetails[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+interface MessageResponse {
+  message: string;
+}
+
+interface BookResponse {
+  message: string;
+  book: Book;
+}
+
+interface PointsResponse {
+  message: string;
+  points: number;
+}
 
 const router = Router();
 
@@ -29,10 +179,10 @@ router.get('/stats', adminMiddleware, async (_req, res) => {
     stats.exchangesByStatus[exchange.status] = (stats.exchangesByStatus[exchange.status] || 0) + 1;
   }
 
-  res.json(stats);
+  success(res, stats);
 });
 
-router.get('/books', adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/books', adminMiddleware, validatePagination(), async (req: AuthRequest, res) => {
   const { approval_status, search, sort_by, sort_order, page = 1, page_size = 20 } = req.query;
 
   await db.read();
@@ -75,7 +225,7 @@ router.get('/books', adminMiddleware, async (req: AuthRequest, res) => {
     };
   });
 
-  res.json({
+  success(res, {
     books: booksWithOwner,
     total,
     page: pageNum,
@@ -84,21 +234,21 @@ router.get('/books', adminMiddleware, async (req: AuthRequest, res) => {
   });
 });
 
-router.post('/books/:id/approve', adminMiddleware, async (req: AuthRequest, res) => {
+router.post('/books/:id/approve', adminMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   const { id } = req.params;
 
   await db.read();
   const book = db.data.books.find(b => b.id === parseInt(id));
 
   if (!book) {
-    return res.status(404).json({ error: 'Book not found' });
+    return notFound(res, 'Book not found');
   }
 
   if (book.approval_status === 'approved') {
-    return res.status(400).json({ error: 'Book already approved' });
+    return badRequest(res, 'Book already approved');
   }
 
-  const previousStatus = book.approval_status;
+  const previousStatus = book.approval_status as Book['approval_status'];
   book.approval_status = 'approved';
   book.reviewed_by = req.user!.id;
   book.reviewed_at = new Date().toISOString();
@@ -113,10 +263,14 @@ router.post('/books/:id/approve', adminMiddleware, async (req: AuthRequest, res)
 
   await db.write();
 
-  res.json({ message: 'Book approved successfully', book });
+  success(res, { message: 'Book approved successfully', book });
 });
 
-router.post('/books/:id/reject', adminMiddleware, async (req: AuthRequest, res) => {
+router.post('/books/:id/reject', adminMiddleware, validateIdParam(), validate({
+  body: {
+    reason: { type: 'string', required: true }
+  }
+}), async (req: AuthRequest, res) => {
   const { id } = req.params;
   const { reason } = req.body;
 
@@ -124,7 +278,7 @@ router.post('/books/:id/reject', adminMiddleware, async (req: AuthRequest, res) 
   const book = db.data.books.find(b => b.id === parseInt(id));
 
   if (!book) {
-    return res.status(404).json({ error: 'Book not found' });
+    return notFound(res, 'Book not found');
   }
 
   book.approval_status = 'rejected';
@@ -134,26 +288,38 @@ router.post('/books/:id/reject', adminMiddleware, async (req: AuthRequest, res) 
 
   await db.write();
 
-  res.json({ message: 'Book rejected successfully', book });
+  success(res, { message: 'Book rejected successfully', book });
 });
 
-router.delete('/books/:id', adminMiddleware, async (req: AuthRequest, res) => {
+router.delete('/books/:id', adminMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   const { id } = req.params;
 
   await db.read();
   const bookIndex = db.data.books.findIndex(b => b.id === parseInt(id));
 
   if (bookIndex === -1) {
-    return res.status(404).json({ error: 'Book not found' });
+    return notFound(res, 'Book not found');
   }
 
   db.data.books.splice(bookIndex, 1);
   await db.write();
 
-  res.json({ message: 'Book deleted successfully' });
+  success(res, { message: 'Book deleted successfully' });
 });
 
-router.put('/books/:id', adminMiddleware, async (req: AuthRequest, res) => {
+router.put('/books/:id', adminMiddleware, validateIdParam(), validate({
+  body: {
+    title: { type: 'string' },
+    author: { type: 'string' },
+    cover: { type: 'string' },
+    description: { type: 'string' },
+    isbn: { type: 'string' },
+    category: { type: 'string' },
+    condition: { type: 'string' },
+    points_required: { type: 'number', min: 0 },
+    status: { type: 'string' }
+  }
+}), async (req: AuthRequest, res) => {
   const { id } = req.params;
   const { title, author, cover, description, isbn, category, condition, points_required, status } = req.body;
 
@@ -161,7 +327,7 @@ router.put('/books/:id', adminMiddleware, async (req: AuthRequest, res) => {
   const book = db.data.books.find(b => b.id === parseInt(id));
 
   if (!book) {
-    return res.status(404).json({ error: 'Book not found' });
+    return notFound(res, 'Book not found');
   }
 
   if (title !== undefined) book.title = title;
@@ -176,10 +342,10 @@ router.put('/books/:id', adminMiddleware, async (req: AuthRequest, res) => {
 
   await db.write();
 
-  res.json(book);
+  success(res, book);
 });
 
-router.get('/users', adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/users', adminMiddleware, validatePagination(), async (req: AuthRequest, res) => {
   const { search, status, role, sort_by, sort_order, page = 1, page_size = 20 } = req.query;
 
   await db.read();
@@ -240,7 +406,7 @@ router.get('/users', adminMiddleware, async (req: AuthRequest, res) => {
     };
   });
 
-  res.json({
+  success(res, {
     users: usersWithStats,
     total,
     page: pageNum,
@@ -249,7 +415,11 @@ router.get('/users', adminMiddleware, async (req: AuthRequest, res) => {
   });
 });
 
-router.put('/users/:id/ban', adminMiddleware, async (req: AuthRequest, res) => {
+router.put('/users/:id/ban', adminMiddleware, validateIdParam(), validate({
+  body: {
+    reason: { type: 'string' }
+  }
+}), async (req: AuthRequest, res) => {
   const { id } = req.params;
   const { reason } = req.body;
 
@@ -257,78 +427,87 @@ router.put('/users/:id/ban', adminMiddleware, async (req: AuthRequest, res) => {
   const user = db.data.users.find(u => u.id === parseInt(id));
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return notFound(res, 'User not found');
   }
 
   if (user.role === 'admin') {
-    return res.status(400).json({ error: 'Cannot ban an admin user' });
+    return badRequest(res, 'Cannot ban an admin user');
   }
 
   user.status = 'banned';
   await db.write();
 
-  res.json({ message: 'User banned successfully' });
+  success(res, { message: 'User banned successfully' });
 });
 
-router.put('/users/:id/unban', adminMiddleware, async (_req, res) => {
+router.put('/users/:id/unban', adminMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   const { id } = req.params;
 
   await db.read();
   const user = db.data.users.find(u => u.id === parseInt(id));
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return notFound(res, 'User not found');
   }
 
   user.status = 'active';
   await db.write();
 
-  res.json({ message: 'User unbanned successfully' });
+  success(res, { message: 'User unbanned successfully' });
 });
 
-router.put('/users/:id/role', adminMiddleware, async (req: AuthRequest, res) => {
+router.put('/users/:id/role', adminMiddleware, validateIdParam(), validate({
+  body: {
+    role: { type: 'string', required: true, enum: ['user', 'admin'] }
+  }
+}), async (req: AuthRequest, res) => {
   const { id } = req.params;
   const { role } = req.body;
 
   if (!['user', 'admin'].includes(role)) {
-    return res.status(400).json({ error: 'Invalid role' });
+    return badRequest(res, 'Invalid role');
   }
 
   await db.read();
   const user = db.data.users.find(u => u.id === parseInt(id));
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return notFound(res, 'User not found');
   }
 
   user.role = role;
   await db.write();
 
-  res.json({ message: 'User role updated successfully' });
+  success(res, { message: 'User role updated successfully' });
 });
 
-router.put('/users/:id/points', adminMiddleware, async (req: AuthRequest, res) => {
+router.put('/users/:id/points', adminMiddleware, validateIdParam(), validate({
+  body: {
+    points: { type: 'number', required: true },
+    reason: { type: 'string' }
+  }
+}), async (req: AuthRequest, res) => {
   const { id } = req.params;
   const { points, reason } = req.body;
 
   if (points === undefined || isNaN(points)) {
-    return res.status(400).json({ error: 'Points value is required' });
+    return badRequest(res, 'Points value is required');
   }
 
   await db.read();
   const user = db.data.users.find(u => u.id === parseInt(id));
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return notFound(res, 'User not found');
   }
 
   user.points = parseInt(points);
   await db.write();
 
-  res.json({ message: 'User points updated successfully', points: user.points });
+  success(res, { message: 'User points updated successfully', points: user.points });
 });
 
-router.get('/exchanges', adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/exchanges', adminMiddleware, validatePagination(), async (req: AuthRequest, res) => {
   const { status, search, sort_by, sort_order, page = 1, page_size = 20 } = req.query;
 
   await db.read();
@@ -359,7 +538,7 @@ router.get('/exchanges', adminMiddleware, async (req: AuthRequest, res) => {
     };
   });
 
-  res.json({
+  success(res, {
     exchanges: exchangesWithDetails,
     total,
     page: pageNum,
@@ -368,7 +547,7 @@ router.get('/exchanges', adminMiddleware, async (req: AuthRequest, res) => {
   });
 });
 
-router.get('/posts', adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/posts', adminMiddleware, validatePagination(), async (req: AuthRequest, res) => {
   const { search, sort_by, sort_order, page = 1, page_size = 20 } = req.query;
 
   await db.read();
@@ -397,7 +576,7 @@ router.get('/posts', adminMiddleware, async (req: AuthRequest, res) => {
     };
   });
 
-  res.json({
+  success(res, {
     posts: postsWithAuthor,
     total,
     page: pageNum,
@@ -406,14 +585,14 @@ router.get('/posts', adminMiddleware, async (req: AuthRequest, res) => {
   });
 });
 
-router.delete('/posts/:id', adminMiddleware, async (req: AuthRequest, res) => {
+router.delete('/posts/:id', adminMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   const { id } = req.params;
 
   await db.read();
   const postIndex = db.data.posts.findIndex(p => p.id === parseInt(id));
 
   if (postIndex === -1) {
-    return res.status(404).json({ error: 'Post not found' });
+    return notFound(res, 'Post not found');
   }
 
   const post = db.data.posts[postIndex];
@@ -431,10 +610,10 @@ router.delete('/posts/:id', adminMiddleware, async (req: AuthRequest, res) => {
 
   await db.write();
 
-  res.json({ message: 'Post deleted successfully' });
+  success(res, { message: 'Post deleted successfully' });
 });
 
-router.get('/donations', adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/donations', adminMiddleware, validatePagination(), async (req: AuthRequest, res) => {
   const { status, page = 1, page_size = 20 } = req.query;
 
   await db.read();
@@ -462,7 +641,7 @@ router.get('/donations', adminMiddleware, async (req: AuthRequest, res) => {
     };
   });
 
-  res.json({
+  success(res, {
     donations: donationsWithUser,
     total,
     page: pageNum,
@@ -471,14 +650,14 @@ router.get('/donations', adminMiddleware, async (req: AuthRequest, res) => {
   });
 });
 
-router.post('/donations/:id/approve', adminMiddleware, async (req: AuthRequest, res) => {
+router.post('/donations/:id/approve', adminMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   const { id } = req.params;
 
   await db.read();
   const donation = db.data.donations.find(d => d.id === parseInt(id));
 
   if (!donation) {
-    return res.status(404).json({ error: 'Donation not found' });
+    return notFound(res, 'Donation not found');
   }
 
   donation.status = 'approved';
@@ -487,10 +666,14 @@ router.post('/donations/:id/approve', adminMiddleware, async (req: AuthRequest, 
 
   await db.write();
 
-  res.json({ message: 'Donation approved successfully' });
+  success(res, { message: 'Donation approved successfully' });
 });
 
-router.post('/donations/:id/reject', adminMiddleware, async (req: AuthRequest, res) => {
+router.post('/donations/:id/reject', adminMiddleware, validateIdParam(), validate({
+  body: {
+    reason: { type: 'string' }
+  }
+}), async (req: AuthRequest, res) => {
   const { id } = req.params;
   const { reason } = req.body;
 
@@ -498,7 +681,7 @@ router.post('/donations/:id/reject', adminMiddleware, async (req: AuthRequest, r
   const donation = db.data.donations.find(d => d.id === parseInt(id));
 
   if (!donation) {
-    return res.status(404).json({ error: 'Donation not found' });
+    return notFound(res, 'Donation not found');
   }
 
   donation.status = 'rejected';
@@ -507,10 +690,10 @@ router.post('/donations/:id/reject', adminMiddleware, async (req: AuthRequest, r
 
   await db.write();
 
-  res.json({ message: 'Donation rejected successfully' });
+  success(res, { message: 'Donation rejected successfully' });
 });
 
-router.get('/reading-clubs', adminMiddleware, async (req: AuthRequest, res) => {
+router.get('/reading-clubs', adminMiddleware, validatePagination(), async (req: AuthRequest, res) => {
   const { status, page = 1, page_size = 20 } = req.query;
 
   await db.read();
@@ -539,7 +722,7 @@ router.get('/reading-clubs', adminMiddleware, async (req: AuthRequest, res) => {
     };
   });
 
-  res.json({
+  success(res, {
     clubs: clubsWithDetails,
     total,
     page: pageNum,
@@ -548,14 +731,14 @@ router.get('/reading-clubs', adminMiddleware, async (req: AuthRequest, res) => {
   });
 });
 
-router.delete('/reading-clubs/:id', adminMiddleware, async (req: AuthRequest, res) => {
+router.delete('/reading-clubs/:id', adminMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   const { id } = req.params;
 
   await db.read();
   const clubIndex = db.data.readingClubs.findIndex(c => c.id === parseInt(id));
 
   if (clubIndex === -1) {
-    return res.status(404).json({ error: 'Reading club not found' });
+    return notFound(res, 'Reading club not found');
   }
 
   db.data.readingClubs.splice(clubIndex, 1);
@@ -563,7 +746,7 @@ router.delete('/reading-clubs/:id', adminMiddleware, async (req: AuthRequest, re
 
   await db.write();
 
-  res.json({ message: 'Reading club deleted successfully' });
+  success(res, { message: 'Reading club deleted successfully' });
 });
 
 export default router;

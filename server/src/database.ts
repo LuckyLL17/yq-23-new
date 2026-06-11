@@ -9,7 +9,7 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-interface User {
+export interface User {
   id: number;
   username: string;
   email: string;
@@ -22,7 +22,7 @@ interface User {
   created_at: string;
 }
 
-interface Book {
+export interface Book {
   id: number;
   title: string;
   author: string;
@@ -42,7 +42,7 @@ interface Book {
   created_at: string;
 }
 
-interface DriftRecord {
+export interface DriftRecord {
   id: number;
   book_id: number;
   user_id: number;
@@ -52,9 +52,9 @@ interface DriftRecord {
   created_at: string;
 }
 
-type ExchangeStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'rejected' | 'cancelled' | 'expired';
+export type ExchangeStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'rejected' | 'cancelled' | 'expired';
 
-interface Exchange {
+export interface Exchange {
   id: number;
   book_id: number;
   requester_id: number;
@@ -74,14 +74,14 @@ interface Exchange {
   requester_rated?: boolean;
 }
 
-interface SearchHistory {
+export interface SearchHistory {
   id: number;
   user_id: number;
   keyword: string;
   created_at: string;
 }
 
-interface Topic {
+export interface Topic {
   id: number;
   name: string;
   description?: string;
@@ -90,7 +90,7 @@ interface Topic {
   created_at: string;
 }
 
-interface Post {
+export interface Post {
   id: number;
   title: string;
   content: string;
@@ -104,7 +104,7 @@ interface Post {
   updated_at: string;
 }
 
-interface Comment {
+export interface Comment {
   id: number;
   post_id: number;
   author_id: number;
@@ -115,21 +115,21 @@ interface Comment {
   created_at: string;
 }
 
-interface PostLike {
+export interface PostLike {
   id: number;
   post_id: number;
   user_id: number;
   created_at: string;
 }
 
-interface CommentLike {
+export interface CommentLike {
   id: number;
   comment_id: number;
   user_id: number;
   created_at: string;
 }
 
-interface Wishlist {
+export interface Wishlist {
   id: number;
   user_id: number;
   name: string;
@@ -138,14 +138,14 @@ interface Wishlist {
   created_at: string;
 }
 
-interface WishlistItem {
+export interface WishlistItem {
   id: number;
   wishlist_id: number;
   book_id: number;
   created_at: string;
 }
 
-interface ReadingGoal {
+export interface ReadingGoal {
   id: number;
   user_id: number;
   title: string;
@@ -157,7 +157,7 @@ interface ReadingGoal {
   created_at: string;
 }
 
-interface GoalBook {
+export interface GoalBook {
   id: number;
   goal_id: number;
   book_id: number;
@@ -166,7 +166,7 @@ interface GoalBook {
   added_at: string;
 }
 
-interface Achievement {
+export interface Achievement {
   id: number;
   name: string;
   description: string;
@@ -178,14 +178,14 @@ interface Achievement {
   created_at: string;
 }
 
-interface UserAchievement {
+export interface UserAchievement {
   id: number;
   user_id: number;
   achievement_id: number;
   unlocked_at: string;
 }
 
-interface ReadingClub {
+export interface ReadingClub {
   id: number;
   title: string;
   description: string;
@@ -204,7 +204,7 @@ interface ReadingClub {
   updated_at: string;
 }
 
-interface ReadingClubParticipant {
+export interface ReadingClubParticipant {
   id: number;
   club_id: number;
   user_id: number;
@@ -212,7 +212,7 @@ interface ReadingClubParticipant {
   registered_at: string;
 }
 
-interface ExchangeReview {
+export interface ExchangeReview {
   id: number;
   exchange_id: number;
   reviewer_id: number;
@@ -222,14 +222,14 @@ interface ExchangeReview {
   created_at: string;
 }
 
-interface Follow {
+export interface Follow {
   id: number;
   follower_id: number;
   following_id: number;
   created_at: string;
 }
 
-interface Donation {
+export interface Donation {
   id: number;
   user_id: number;
   book_id: number | null;
@@ -247,7 +247,7 @@ interface Donation {
   certificate_issued?: boolean;
 }
 
-interface DonationCertificate {
+export interface DonationCertificate {
   id: number;
   donation_id: number;
   user_id: number;
@@ -255,7 +255,7 @@ interface DonationCertificate {
   issued_at: string;
 }
 
-interface Data {
+export interface Data {
   users: User[];
   books: Book[];
   driftRecords: DriftRecord[];

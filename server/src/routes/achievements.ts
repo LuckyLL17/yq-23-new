@@ -1,12 +1,39 @@
 import { Router } from 'express';
-import db from '../database';
+import db, { Achievement, UserAchievement } from '../database';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { success, unauthorized } from '../utils/response';
 
 const router = Router();
 
+interface AchievementWithUnlocked extends Achievement {
+  unlocked: boolean;
+  unlocked_at: string | null;
+}
+
+interface AchievementStats {
+  books_read: number;
+  goals_completed: number;
+  posts_made: number;
+  books_added: number;
+  exchange_count: number;
+  achievements_unlocked: number;
+  total_achievements: number;
+}
+
+interface CheckAchievementsResponse {
+  newly_unlocked: AchievementWithUnlocked[];
+  stats: Omit<AchievementStats, 'achievements_unlocked' | 'total_achievements'>;
+}
+
+interface AchievementType {
+  key: string;
+  name: string;
+  icon: string;
+}
+
 router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   await db.read();
@@ -20,19 +47,19 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
       ...achievement,
       unlocked: !!userAchievement,
       unlocked_at: userAchievement?.unlocked_at || null,
-    };
+    } as AchievementWithUnlocked;
   }).sort((a, b) => {
     if (a.unlocked && !b.unlocked) return -1;
     if (!a.unlocked && b.unlocked) return 1;
     return a.condition_value - b.condition_value;
   });
 
-  res.json(achievements);
+  success<AchievementWithUnlocked[]>(res, achievements);
 });
 
 router.get('/mine', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   await db.read();
@@ -48,15 +75,15 @@ router.get('/mine', authMiddleware, async (req: AuthRequest, res) => {
       ...achievement,
       unlocked: true,
       unlocked_at: ua.unlocked_at,
-    };
-  }).filter(Boolean);
+    } as AchievementWithUnlocked;
+  }).filter(Boolean) as AchievementWithUnlocked[];
 
-  res.json(achievements);
+  success<AchievementWithUnlocked[]>(res, achievements);
 });
 
 router.get('/stats', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   await db.read();
@@ -70,7 +97,7 @@ router.get('/stats', authMiddleware, async (req: AuthRequest, res) => {
   );
   const userAchievements = db.data.userAchievements.filter(ua => ua.user_id === req.user!.id);
 
-  const stats = {
+  const stats: AchievementStats = {
     books_read: driftRecords.length,
     goals_completed: completedGoals.length,
     posts_made: userPosts.length,
@@ -80,12 +107,12 @@ router.get('/stats', authMiddleware, async (req: AuthRequest, res) => {
     total_achievements: db.data.achievements.length,
   };
 
-  res.json(stats);
+  success<AchievementStats>(res, stats);
 });
 
 router.post('/check', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   await db.read();
@@ -110,7 +137,7 @@ router.post('/check', authMiddleware, async (req: AuthRequest, res) => {
     .filter(ua => ua.user_id === req.user!.id)
     .map(ua => ua.achievement_id);
 
-  const newlyUnlocked: any[] = [];
+  const newlyUnlocked: AchievementWithUnlocked[] = [];
 
   for (const achievement of db.data.achievements) {
     if (userAchievementIds.includes(achievement.id)) continue;
@@ -118,14 +145,14 @@ router.post('/check', authMiddleware, async (req: AuthRequest, res) => {
     const currentValue = stats[achievement.condition_type as keyof typeof stats] || 0;
     if (currentValue >= achievement.condition_value) {
       const newId = Math.max(0, ...db.data.userAchievements.map(ua => ua.id)) + 1;
-      const userAchievement = {
+      const userAchievement: UserAchievement = {
         id: newId,
         user_id: req.user.id,
         achievement_id: achievement.id,
         unlocked_at: new Date().toISOString(),
       };
       db.data.userAchievements.push(userAchievement);
-      newlyUnlocked.push({ ...achievement, unlocked_at: userAchievement.unlocked_at });
+      newlyUnlocked.push({ ...achievement, unlocked: true, unlocked_at: userAchievement.unlocked_at });
 
       const user = db.data.users.find(u => u.id === req.user!.id);
       if (user) {
@@ -138,20 +165,20 @@ router.post('/check', authMiddleware, async (req: AuthRequest, res) => {
     await db.write();
   }
 
-  res.json({
+  success<CheckAchievementsResponse>(res, {
     newly_unlocked: newlyUnlocked,
     stats,
   });
 });
 
 router.get('/types', (_req, res) => {
-  const types = [
+  const types: AchievementType[] = [
     { key: 'reading', name: '阅读成就', icon: '📚' },
     { key: 'goal', name: '目标成就', icon: '🎯' },
     { key: 'social', name: '社交成就', icon: '💬' },
     { key: 'collection', name: '收藏成就', icon: '📦' },
   ];
-  res.json(types);
+  success<AchievementType[]>(res, types);
 });
 
 export default router;

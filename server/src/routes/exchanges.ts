@@ -1,11 +1,68 @@
 import { Router } from 'express';
-import db from '../database';
+import db, { Exchange, ExchangeReview, Book, User } from '../database';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { success, created, badRequest, unauthorized, forbidden, notFound } from '../utils/response';
+import { validate, validateIdParam } from '../middleware/validate';
 
 const router = Router();
 
 const PENDING_EXPIRE_DAYS = 7;
 const DEFAULT_BORROW_DAYS = 30;
+
+interface CreateExchangeRequest {
+  book_id: number;
+  message?: string;
+  borrow_days?: number;
+}
+
+interface ExchangeWithDetails extends Exchange {
+  title?: string;
+  cover?: string;
+  author?: string;
+  points_required?: number;
+  requester_name?: string;
+  requester_avatar?: string;
+  owner_name?: string;
+  owner_avatar?: string;
+  my_review?: ExchangeReview;
+  other_review?: ExchangeReview;
+}
+
+interface ExchangeDetailResponse extends Exchange {
+  book: Book | undefined;
+  requester: {
+    id: number | undefined;
+    username: string | undefined;
+    avatar: string | undefined;
+  };
+  owner: {
+    id: number | undefined;
+    username: string | undefined;
+    avatar: string | undefined;
+  };
+  reviews: ExchangeReview[];
+}
+
+interface ReviewExchangeRequest {
+  rating: number;
+  comment?: string;
+}
+
+interface UserReviewsResponse {
+  reviews: (ExchangeReview & {
+    reviewer_name?: string;
+    reviewer_avatar?: string;
+    book_title?: string;
+    book_cover?: string;
+  })[];
+  average_rating: number;
+  review_count: number;
+}
+
+interface MessageResponse {
+  message: string;
+  exchange?: Exchange;
+}
 
 function checkAndUpdateExpiredExchanges() {
   const now = new Date();
@@ -29,72 +86,79 @@ function checkAndUpdateExpiredExchanges() {
   return hasChanges;
 }
 
-router.post('/', authMiddleware, async (req: AuthRequest, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+router.post(
+  '/',
+  authMiddleware,
+  validate({
+    body: {
+      book_id: { type: 'number', required: true },
+      message: { type: 'string' },
+      borrow_days: { type: 'number', min: 1 },
+    },
+  }),
+  async (req: AuthRequest, res) => {
+    if (!req.user) {
+      return unauthorized(res, 'Not authenticated');
+    }
+
+    const { book_id, message, borrow_days } = req.body as CreateExchangeRequest;
+
+    await db.read();
+    checkAndUpdateExpiredExchanges();
+
+    const book = db.data.books.find((b) => b.id === book_id);
+
+    if (!book) {
+      return notFound(res, 'Book not found');
+    }
+
+    if (book.current_holder_id === req.user.id) {
+      return badRequest(res, 'You already have this book');
+    }
+
+    if (book.status !== 'available') {
+      return badRequest(res, 'Book is not available for exchange');
+    }
+
+    const user = db.data.users.find((u) => u.id === req.user!.id);
+    if (!user || user.points < book.points_required) {
+      return badRequest(res, 'Insufficient points');
+    }
+
+    const newId = Math.max(0, ...db.data.exchanges.map((e) => e.id)) + 1;
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + PENDING_EXPIRE_DAYS * 24 * 60 * 60 * 1000);
+
+    const newExchange: Exchange = {
+      id: newId,
+      book_id,
+      requester_id: req.user.id,
+      owner_id: book.current_holder_id,
+      status: 'pending',
+      message,
+      created_at: now.toISOString(),
+      expires_at: expiresAt.toISOString(),
+      borrow_days: borrow_days || DEFAULT_BORROW_DAYS,
+      owner_rated: false,
+      requester_rated: false,
+    };
+
+    db.data.exchanges.push(newExchange);
+    await db.write();
+
+    created(res, newExchange);
   }
-
-  const { book_id, message, borrow_days } = req.body;
-
-  if (!book_id) {
-    return res.status(400).json({ error: 'Book ID is required' });
-  }
-
-  await db.read();
-  checkAndUpdateExpiredExchanges();
-
-  const book = db.data.books.find((b) => b.id === book_id);
-
-  if (!book) {
-    return res.status(404).json({ error: 'Book not found' });
-  }
-
-  if (book.current_holder_id === req.user.id) {
-    return res.status(400).json({ error: 'You already have this book' });
-  }
-
-  if (book.status !== 'available') {
-    return res.status(400).json({ error: 'Book is not available for exchange' });
-  }
-
-  const user = db.data.users.find((u) => u.id === req.user!.id);
-  if (!user || user.points < book.points_required) {
-    return res.status(400).json({ error: 'Insufficient points' });
-  }
-
-  const newId = Math.max(0, ...db.data.exchanges.map((e) => e.id)) + 1;
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + PENDING_EXPIRE_DAYS * 24 * 60 * 60 * 1000);
-
-  const newExchange = {
-    id: newId,
-    book_id,
-    requester_id: req.user.id,
-    owner_id: book.current_holder_id,
-    status: 'pending' as const,
-    message,
-    created_at: now.toISOString(),
-    expires_at: expiresAt.toISOString(),
-    borrow_days: borrow_days || DEFAULT_BORROW_DAYS,
-    owner_rated: false,
-    requester_rated: false,
-  };
-
-  db.data.exchanges.push(newExchange);
-  await db.write();
-
-  res.status(201).json(newExchange);
-});
+);
 
 router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   await db.read();
   checkAndUpdateExpiredExchanges();
 
-  const exchanges = db.data.exchanges
+  const exchanges: ExchangeWithDetails[] = db.data.exchanges
     .filter((e) => e.requester_id === req.user!.id || e.owner_id === req.user!.id)
     .map((exchange) => {
       const book = db.data.books.find((b) => b.id === exchange.book_id);
@@ -129,12 +193,12 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-  res.json(exchanges);
+  success(res, exchanges);
 });
 
-router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/:id', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -146,14 +210,14 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
   const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
 
   if (!exchange) {
-    return res.status(404).json({ error: 'Exchange not found' });
+    return notFound(res, 'Exchange not found');
   }
 
   if (
     exchange.requester_id !== req.user.id &&
     exchange.owner_id !== req.user.id
   ) {
-    return res.status(403).json({ error: 'Not authorized' });
+    return forbidden(res, 'Not authorized');
   }
 
   const book = db.data.books.find((b) => b.id === exchange.book_id);
@@ -164,7 +228,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
     (r) => r.exchange_id === exchangeId
   );
 
-  res.json({
+  const response: ExchangeDetailResponse = {
     ...exchange,
     book,
     requester: {
@@ -178,12 +242,14 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
       avatar: owner?.avatar,
     },
     reviews,
-  });
+  };
+
+  success(res, response);
 });
 
-router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/accept', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -195,20 +261,20 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res) => {
   const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
 
   if (!exchange) {
-    return res.status(404).json({ error: 'Exchange not found' });
+    return notFound(res, 'Exchange not found');
   }
 
   if (exchange.owner_id !== req.user.id) {
-    return res.status(403).json({ error: 'Not authorized' });
+    return forbidden(res, 'Not authorized');
   }
 
   if (exchange.status !== 'pending') {
-    return res.status(400).json({ error: 'Exchange already processed' });
+    return badRequest(res, 'Exchange already processed');
   }
 
   const book = db.data.books.find((b) => b.id === exchange.book_id);
   if (!book) {
-    return res.status(404).json({ error: 'Book not found' });
+    return notFound(res, 'Book not found');
   }
 
   exchange.status = 'accepted';
@@ -225,12 +291,13 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res) => {
 
   await db.write();
 
-  res.json({ message: 'Exchange accepted', exchange });
+  const response: MessageResponse = { message: 'Exchange accepted', exchange };
+  success(res, response);
 });
 
-router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/reject', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -242,27 +309,27 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res) => {
   const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
 
   if (!exchange) {
-    return res.status(404).json({ error: 'Exchange not found' });
+    return notFound(res, 'Exchange not found');
   }
 
   if (exchange.owner_id !== req.user.id) {
-    return res.status(403).json({ error: 'Not authorized' });
+    return forbidden(res, 'Not authorized');
   }
 
   if (exchange.status !== 'pending') {
-    return res.status(400).json({ error: 'Exchange already processed' });
+    return badRequest(res, 'Exchange already processed');
   }
 
   exchange.status = 'rejected';
   exchange.rejected_at = new Date().toISOString();
   await db.write();
 
-  res.json({ message: 'Exchange rejected' });
+  success(res, { message: 'Exchange rejected' });
 });
 
-router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/cancel', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -274,27 +341,27 @@ router.post('/:id/cancel', authMiddleware, async (req: AuthRequest, res) => {
   const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
 
   if (!exchange) {
-    return res.status(404).json({ error: 'Exchange not found' });
+    return notFound(res, 'Exchange not found');
   }
 
   if (exchange.requester_id !== req.user.id) {
-    return res.status(403).json({ error: 'Not authorized' });
+    return forbidden(res, 'Not authorized');
   }
 
   if (exchange.status !== 'pending') {
-    return res.status(400).json({ error: 'Cannot cancel this exchange' });
+    return badRequest(res, 'Cannot cancel this exchange');
   }
 
   exchange.status = 'cancelled';
   exchange.cancelled_at = new Date().toISOString();
   await db.write();
 
-  res.json({ message: 'Exchange cancelled' });
+  success(res, { message: 'Exchange cancelled' });
 });
 
-router.post('/:id/start', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/start', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -306,32 +373,31 @@ router.post('/:id/start', authMiddleware, async (req: AuthRequest, res) => {
   const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
 
   if (!exchange) {
-    return res.status(404).json({ error: 'Exchange not found' });
+    return notFound(res, 'Exchange not found');
   }
 
   if (
     exchange.requester_id !== req.user.id &&
     exchange.owner_id !== req.user.id
   ) {
-    return res.status(403).json({ error: 'Not authorized' });
+    return forbidden(res, 'Not authorized');
   }
 
   if (exchange.status !== 'accepted') {
-    return res
-      .status(400)
-      .json({ error: 'Can only start accepted exchanges' });
+    return badRequest(res, 'Can only start accepted exchanges');
   }
 
   exchange.status = 'in_progress';
   exchange.started_at = new Date().toISOString();
   await db.write();
 
-  res.json({ message: 'Exchange started', exchange });
+  const response: MessageResponse = { message: 'Exchange started', exchange };
+  success(res, response);
 });
 
-router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/complete', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -343,20 +409,18 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res) => {
   const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
 
   if (!exchange) {
-    return res.status(404).json({ error: 'Exchange not found' });
+    return notFound(res, 'Exchange not found');
   }
 
   if (
     exchange.requester_id !== req.user.id &&
     exchange.owner_id !== req.user.id
   ) {
-    return res.status(403).json({ error: 'Not authorized' });
+    return forbidden(res, 'Not authorized');
   }
 
   if (exchange.status !== 'in_progress' && exchange.status !== 'accepted') {
-    return res
-      .status(400)
-      .json({ error: 'Can only complete in-progress exchanges' });
+    return badRequest(res, 'Can only complete in-progress exchanges');
   }
 
   exchange.status = 'completed';
@@ -369,21 +433,93 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res) => {
 
   await db.write();
 
-  res.json({ message: 'Exchange completed', exchange });
+  const response: MessageResponse = { message: 'Exchange completed', exchange };
+  success(res, response);
 });
 
-router.post('/:id/review', authMiddleware, async (req: AuthRequest, res) => {
+router.post(
+  '/:id/review',
+  authMiddleware,
+  validateIdParam(),
+  validate({
+    body: {
+      rating: { type: 'number', required: true, min: 1, max: 5 },
+      comment: { type: 'string' },
+    },
+  }),
+  async (req: AuthRequest, res) => {
+    if (!req.user) {
+      return unauthorized(res, 'Not authenticated');
+    }
+
+    const { id } = req.params;
+    const exchangeId = parseInt(id);
+    const { rating, comment } = req.body as ReviewExchangeRequest;
+
+    await db.read();
+    checkAndUpdateExpiredExchanges();
+
+    const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
+
+    if (!exchange) {
+      return notFound(res, 'Exchange not found');
+    }
+
+    if (
+      exchange.requester_id !== req.user.id &&
+      exchange.owner_id !== req.user.id
+    ) {
+      return forbidden(res, 'Not authorized');
+    }
+
+    if (exchange.status !== 'completed') {
+      return badRequest(res, 'Can only review completed exchanges');
+    }
+
+    const existingReview = db.data.exchangeReviews.find(
+      (r) => r.exchange_id === exchangeId && r.reviewer_id === req.user!.id
+    );
+
+    if (existingReview) {
+      return badRequest(res, 'You have already reviewed this exchange');
+    }
+
+    const isOwner = exchange.owner_id === req.user.id;
+    const revieweeId = isOwner ? exchange.requester_id : exchange.owner_id;
+
+    const newId = Math.max(0, ...db.data.exchangeReviews.map((r) => r.id)) + 1;
+
+    const newReview: ExchangeReview = {
+      id: newId,
+      exchange_id: exchangeId,
+      reviewer_id: req.user.id,
+      reviewee_id: revieweeId,
+      rating,
+      comment,
+      created_at: new Date().toISOString(),
+    };
+
+    db.data.exchangeReviews.push(newReview);
+
+    if (isOwner) {
+      exchange.owner_rated = true;
+    } else {
+      exchange.requester_rated = true;
+    }
+
+    await db.write();
+
+    created(res, newReview);
+  }
+);
+
+router.get('/:id/reviews', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
   const exchangeId = parseInt(id);
-  const { rating, comment } = req.body;
-
-  if (!rating || rating < 1 || rating > 5) {
-    return res.status(400).json({ error: 'Rating must be between 1 and 5' });
-  }
 
   await db.read();
   checkAndUpdateExpiredExchanges();
@@ -391,80 +527,14 @@ router.post('/:id/review', authMiddleware, async (req: AuthRequest, res) => {
   const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
 
   if (!exchange) {
-    return res.status(404).json({ error: 'Exchange not found' });
+    return notFound(res, 'Exchange not found');
   }
 
   if (
     exchange.requester_id !== req.user.id &&
     exchange.owner_id !== req.user.id
   ) {
-    return res.status(403).json({ error: 'Not authorized' });
-  }
-
-  if (exchange.status !== 'completed') {
-    return res
-      .status(400)
-      .json({ error: 'Can only review completed exchanges' });
-  }
-
-  const existingReview = db.data.exchangeReviews.find(
-    (r) => r.exchange_id === exchangeId && r.reviewer_id === req.user!.id
-  );
-
-  if (existingReview) {
-    return res.status(400).json({ error: 'You have already reviewed this exchange' });
-  }
-
-  const isOwner = exchange.owner_id === req.user.id;
-  const revieweeId = isOwner ? exchange.requester_id : exchange.owner_id;
-
-  const newId = Math.max(0, ...db.data.exchangeReviews.map((r) => r.id)) + 1;
-
-  const newReview = {
-    id: newId,
-    exchange_id: exchangeId,
-    reviewer_id: req.user.id,
-    reviewee_id: revieweeId,
-    rating,
-    comment,
-    created_at: new Date().toISOString(),
-  };
-
-  db.data.exchangeReviews.push(newReview);
-
-  if (isOwner) {
-    exchange.owner_rated = true;
-  } else {
-    exchange.requester_rated = true;
-  }
-
-  await db.write();
-
-  res.status(201).json(newReview);
-});
-
-router.get('/:id/reviews', authMiddleware, async (req: AuthRequest, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
-  const { id } = req.params;
-  const exchangeId = parseInt(id);
-
-  await db.read();
-  checkAndUpdateExpiredExchanges();
-
-  const exchange = db.data.exchanges.find((e) => e.id === exchangeId);
-
-  if (!exchange) {
-    return res.status(404).json({ error: 'Exchange not found' });
-  }
-
-  if (
-    exchange.requester_id !== req.user.id &&
-    exchange.owner_id !== req.user.id
-  ) {
-    return res.status(403).json({ error: 'Not authorized' });
+    return forbidden(res, 'Not authorized');
   }
 
   const reviews = db.data.exchangeReviews
@@ -478,10 +548,10 @@ router.get('/:id/reviews', authMiddleware, async (req: AuthRequest, res) => {
       };
     });
 
-  res.json(reviews);
+  success(res, reviews);
 });
 
-router.get('/user/:userId/reviews', async (req, res) => {
+router.get('/user/:userId/reviews', validateIdParam('userId'), async (req, res) => {
   const { userId } = req.params;
   const userIdNum = parseInt(userId);
 
@@ -513,11 +583,13 @@ router.get('/user/:userId/reviews', async (req, res) => {
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;
 
-  res.json({
+  const response: UserReviewsResponse = {
     reviews,
     average_rating: parseFloat(averageRating.toFixed(1)),
     review_count: reviews.length,
-  });
+  };
+
+  success(res, response);
 });
 
 export default router;

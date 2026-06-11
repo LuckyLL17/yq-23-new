@@ -1,16 +1,98 @@
 import { Router } from 'express';
-import db from '../database';
+import db, { User, Book, Post, Follow } from '../database';
 import { authMiddleware, optionalAuthMiddleware, AuthRequest } from '../middleware/auth';
+import { validateIdParam, validatePagination } from '../middleware/validate';
+import { success, badRequest, unauthorized, forbidden, notFound } from '../utils/response';
 
 const router = Router();
 
-router.get('/feed/following', authMiddleware, async (req: AuthRequest, res) => {
+interface UserProfileResponse {
+  id: number;
+  username: string;
+  avatar?: string;
+  bio?: string;
+  points: number;
+  created_at: string;
+  follower_count: number;
+  following_count: number;
+  book_count: number;
+  post_count: number;
+  reading_tags: string[];
+  expertise_fields: string[];
+  shelf_style: string;
+}
+
+interface FollowStatusResponse {
+  is_following: boolean;
+  is_self: boolean;
+}
+
+interface FollowResultResponse {
+  is_following: boolean;
+  follower_count: number;
+}
+
+interface FollowerItem {
+  id: number;
+  username: string;
+  avatar?: string;
+  bio?: string;
+  followed_at: string;
+}
+
+interface PostWithTopics extends Post {
+  topics: Array<{ id: number; name: string; icon?: string }>;
+}
+
+interface PaginatedPostsResponse {
+  posts: PostWithTopics[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+interface UpdateProfileBody {
+  avatar?: string;
+  bio?: string;
+  reading_tags?: string[];
+  expertise_fields?: string[];
+  shelf_style?: string;
+}
+
+function buildUserProfile(user: User): UserProfileResponse {
+  const userId = user.id;
+  const followerCount = db.data.follows.filter(f => f.following_id === userId).length;
+  const followingCount = db.data.follows.filter(f => f.follower_id === userId).length;
+  const bookCount = db.data.books.filter(b => b.owner_id === userId).length;
+  const postCount = db.data.posts.filter(p => p.author_id === userId).length;
+
+  return {
+    id: user.id,
+    username: user.username,
+    avatar: user.avatar,
+    bio: user.bio,
+    points: user.points,
+    created_at: user.created_at,
+    follower_count: followerCount,
+    following_count: followingCount,
+    book_count: bookCount,
+    post_count: postCount,
+    reading_tags: (user as any).reading_tags || [],
+    expertise_fields: (user as any).expertise_fields || [],
+    shelf_style: (user as any).shelf_style || 'grid',
+  };
+}
+
+router.get('/feed/following', authMiddleware, validatePagination(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   const currentUserId = req.user.id;
   const { page = 1, limit = 10 } = req.query;
+
+  await db.read();
 
   const followingIds = db.data.follows
     .filter(f => f.follower_id === currentUserId)
@@ -41,54 +123,37 @@ router.get('/feed/following', authMiddleware, async (req: AuthRequest, res) => {
       author_name: author?.username,
       author_avatar: author?.avatar,
       topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon })),
-      liked: likedPostIds.has(post.id)
+      liked: likedPostIds.has(post.id),
     };
   });
 
-  res.json({
-    posts: postsWithAuthor,
+  success<PaginatedPostsResponse>(res, {
+    posts: postsWithAuthor as PostWithTopics[],
     total,
     page: pageNum,
     limit: limitNum,
-    total_pages: Math.ceil(total / limitNum)
+    total_pages: Math.ceil(total / limitNum),
   });
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateIdParam(), async (req, res) => {
   const { id } = req.params;
   const userId = parseInt(id);
 
+  await db.read();
   const user = db.data.users.find(u => u.id === userId);
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return notFound(res, '用户不存在');
   }
 
-  const followerCount = db.data.follows.filter(f => f.following_id === userId).length;
-  const followingCount = db.data.follows.filter(f => f.follower_id === userId).length;
-  const bookCount = db.data.books.filter(b => b.owner_id === userId).length;
-  const postCount = db.data.posts.filter(p => p.author_id === userId).length;
-
-  res.json({
-    id: user.id,
-    username: user.username,
-    avatar: user.avatar,
-    bio: user.bio,
-    points: user.points,
-    created_at: user.created_at,
-    follower_count: followerCount,
-    following_count: followingCount,
-    book_count: bookCount,
-    post_count: postCount,
-    reading_tags: user.reading_tags || [],
-    expertise_fields: user.expertise_fields || [],
-    shelf_style: user.shelf_style || 'grid'
-  });
+  const profile = buildUserProfile(user);
+  success<UserProfileResponse>(res, profile);
 });
 
-router.get('/:id/follow-status', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/:id/follow-status', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   const { id } = req.params;
@@ -96,19 +161,20 @@ router.get('/:id/follow-status', authMiddleware, async (req: AuthRequest, res) =
   const currentUserId = req.user.id;
 
   if (userId === currentUserId) {
-    return res.json({ is_following: false, is_self: true });
+    return success<FollowStatusResponse>(res, { is_following: false, is_self: true });
   }
 
+  await db.read();
   const isFollowing = db.data.follows.some(
     f => f.follower_id === currentUserId && f.following_id === userId
   );
 
-  res.json({ is_following: isFollowing, is_self: false });
+  success<FollowStatusResponse>(res, { is_following: isFollowing, is_self: false });
 });
 
-router.post('/:id/follow', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/follow', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   const { id } = req.params;
@@ -116,12 +182,13 @@ router.post('/:id/follow', authMiddleware, async (req: AuthRequest, res) => {
   const currentUserId = req.user.id;
 
   if (userId === currentUserId) {
-    return res.status(400).json({ error: 'Cannot follow yourself' });
+    return badRequest(res, '不能关注自己');
   }
 
+  await db.read();
   const targetUser = db.data.users.find(u => u.id === userId);
   if (!targetUser) {
-    return res.status(404).json({ error: 'User not found' });
+    return notFound(res, '用户不存在');
   }
 
   const existingFollow = db.data.follows.find(
@@ -129,15 +196,15 @@ router.post('/:id/follow', authMiddleware, async (req: AuthRequest, res) => {
   );
 
   if (existingFollow) {
-    return res.status(400).json({ error: 'Already following' });
+    return badRequest(res, '已经关注了该用户');
   }
 
   const newId = Math.max(0, ...db.data.follows.map(f => f.id)) + 1;
-  const newFollow = {
+  const newFollow: Follow = {
     id: newId,
     follower_id: currentUserId,
     following_id: userId,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
   };
 
   db.data.follows.push(newFollow);
@@ -145,27 +212,28 @@ router.post('/:id/follow', authMiddleware, async (req: AuthRequest, res) => {
 
   const followerCount = db.data.follows.filter(f => f.following_id === userId).length;
 
-  res.json({
+  success<FollowResultResponse>(res, {
     is_following: true,
-    follower_count: followerCount
-  });
+    follower_count: followerCount,
+  }, '关注成功');
 });
 
-router.post('/:id/unfollow', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/unfollow', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   const { id } = req.params;
   const userId = parseInt(id);
   const currentUserId = req.user.id;
 
+  await db.read();
   const followIndex = db.data.follows.findIndex(
     f => f.follower_id === currentUserId && f.following_id === userId
   );
 
   if (followIndex === -1) {
-    return res.status(400).json({ error: 'Not following yet' });
+    return badRequest(res, '还没有关注该用户');
   }
 
   db.data.follows.splice(followIndex, 1);
@@ -173,16 +241,17 @@ router.post('/:id/unfollow', authMiddleware, async (req: AuthRequest, res) => {
 
   const followerCount = db.data.follows.filter(f => f.following_id === userId).length;
 
-  res.json({
+  success<FollowResultResponse>(res, {
     is_following: false,
-    follower_count: followerCount
-  });
+    follower_count: followerCount,
+  }, '取消关注成功');
 });
 
-router.get('/:id/followers', async (req, res) => {
+router.get('/:id/followers', validateIdParam(), async (req, res) => {
   const { id } = req.params;
   const userId = parseInt(id);
 
+  await db.read();
   const followers = db.data.follows
     .filter(f => f.following_id === userId)
     .map(f => {
@@ -192,17 +261,18 @@ router.get('/:id/followers', async (req, res) => {
         username: user!.username,
         avatar: user!.avatar,
         bio: user!.bio,
-        followed_at: f.created_at
-      };
+        followed_at: f.created_at,
+      } as FollowerItem;
     });
 
-  res.json(followers);
+  success<FollowerItem[]>(res, followers);
 });
 
-router.get('/:id/following', async (req, res) => {
+router.get('/:id/following', validateIdParam(), async (req, res) => {
   const { id } = req.params;
   const userId = parseInt(id);
 
+  await db.read();
   const following = db.data.follows
     .filter(f => f.follower_id === userId)
     .map(f => {
@@ -212,18 +282,19 @@ router.get('/:id/following', async (req, res) => {
         username: user!.username,
         avatar: user!.avatar,
         bio: user!.bio,
-        followed_at: f.created_at
-      };
+        followed_at: f.created_at,
+      } as FollowerItem;
     });
 
-  res.json(following);
+  success<FollowerItem[]>(res, following);
 });
 
-router.get('/:id/posts', async (req, res) => {
+router.get('/:id/posts', validateIdParam(), validatePagination(), async (req, res) => {
   const { id } = req.params;
   const userId = parseInt(id);
   const { page = 1, limit = 10 } = req.query;
 
+  await db.read();
   let posts = db.data.posts
     .filter(p => p.author_id === userId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -240,89 +311,97 @@ router.get('/:id/posts', async (req, res) => {
       .filter(Boolean);
     return {
       ...post,
-      topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon }))
-    };
+      topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon })),
+    } as PostWithTopics;
   });
 
-  res.json({
+  success<PaginatedPostsResponse>(res, {
     posts: postsWithTopics,
     total,
     page: pageNum,
     limit: limitNum,
-    total_pages: Math.ceil(total / limitNum)
+    total_pages: Math.ceil(total / limitNum),
   });
 });
 
-router.get('/:id/books', async (req, res) => {
+router.get('/:id/books', validateIdParam(), async (req, res) => {
   const { id } = req.params;
   const userId = parseInt(id);
 
+  await db.read();
   const books = db.data.books
     .filter(b => b.owner_id === userId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-  res.json(books);
+  success<Book[]>(res, books);
 });
 
 router.put('/me', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   const userId = req.user.id;
-  const { avatar, bio, reading_tags, expertise_fields, shelf_style } = req.body;
+  const { avatar, bio, reading_tags, expertise_fields, shelf_style } = req.body as UpdateProfileBody;
 
+  await db.read();
   const userIndex = db.data.users.findIndex(u => u.id === userId);
   if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
+    return notFound(res, '用户不存在');
   }
 
   const user = db.data.users[userIndex];
 
   if (avatar !== undefined) user.avatar = avatar;
   if (bio !== undefined) user.bio = bio;
-  if (reading_tags !== undefined) user.reading_tags = reading_tags;
-  if (expertise_fields !== undefined) user.expertise_fields = expertise_fields;
-  if (shelf_style !== undefined) user.shelf_style = shelf_style;
+  if (reading_tags !== undefined) (user as any).reading_tags = reading_tags;
+  if (expertise_fields !== undefined) (user as any).expertise_fields = expertise_fields;
+  if (shelf_style !== undefined) (user as any).shelf_style = shelf_style;
 
   await db.write();
 
-  res.json({
+  const userProfile = {
     id: user.id,
     username: user.username,
     email: user.email,
     avatar: user.avatar,
     bio: user.bio,
     points: user.points,
-    reading_tags: user.reading_tags || [],
-    expertise_fields: user.expertise_fields || [],
-    shelf_style: user.shelf_style || 'grid'
-  });
+    reading_tags: (user as any).reading_tags || [],
+    expertise_fields: (user as any).expertise_fields || [],
+    shelf_style: (user as any).shelf_style || 'grid',
+  };
+
+  success(res, userProfile, '个人资料更新成功');
 });
 
 router.get('/me/profile', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   const userId = req.user.id;
+
+  await db.read();
   const user = db.data.users.find(u => u.id === userId);
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return notFound(res, '用户不存在');
   }
 
-  res.json({
+  const profile = {
     id: user.id,
     username: user.username,
     email: user.email,
     avatar: user.avatar,
     bio: user.bio,
     points: user.points,
-    reading_tags: user.reading_tags || [],
-    expertise_fields: user.expertise_fields || [],
-    shelf_style: user.shelf_style || 'grid'
-  });
+    reading_tags: (user as any).reading_tags || [],
+    expertise_fields: (user as any).expertise_fields || [],
+    shelf_style: (user as any).shelf_style || 'grid',
+  };
+
+  success(res, profile);
 });
 
 export default router;

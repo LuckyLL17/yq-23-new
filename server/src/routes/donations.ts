@@ -1,8 +1,102 @@
 import { Router } from 'express';
-import db from '../database';
+import db, { Donation, DonationCertificate, User } from '../database';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { success, created, badRequest, unauthorized, notFound } from '../utils/response';
+import { validate, validateIdParam, validatePagination } from '../middleware/validate';
 
 const router = Router();
+
+interface CreateDonationBody {
+  book_id?: number;
+  book_title: string;
+  book_author: string;
+  book_cover?: string;
+  book_category?: string;
+  book_condition: string;
+  quantity?: number;
+  message?: string;
+}
+
+interface DonationWithCertificate extends Donation {
+  certificate_no?: string;
+  certificate_issued_at?: string;
+}
+
+interface DonationWithUser extends Donation {
+  username?: string;
+  user_avatar?: string;
+}
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+}
+
+interface DonationListResponse {
+  donations: DonationWithCertificate[] | DonationWithUser[];
+  pagination: PaginationInfo;
+}
+
+interface MyDonationListResponse {
+  donations: DonationWithCertificate[];
+  pagination: PaginationInfo;
+}
+
+interface RankingItem {
+  user_id: number;
+  total_books: number;
+  total_donations: number;
+  username?: string;
+  user_avatar?: string;
+}
+
+interface RankingResponse {
+  rankings: RankingItem[];
+  period: string;
+  type: string;
+  total_users: number;
+}
+
+interface DonationStatsResponse {
+  total_books: number;
+  total_donations: number;
+  total_certificates: number;
+  global_total_books: number;
+  my_rank: number;
+  total_donors: number;
+}
+
+interface DonationDetailResponse extends Donation {
+  username?: string;
+  user_avatar?: string;
+  certificate_no?: string;
+  certificate_issued_at?: string;
+}
+
+interface CertificateDonationInfo {
+  id: number;
+  book_title: string;
+  book_author: string;
+  book_category?: string;
+  book_condition: string;
+  quantity: number;
+  message?: string;
+  donated_at: string;
+}
+
+interface CertificateUserInfo {
+  id?: number;
+  username?: string;
+}
+
+interface CertificateResponse {
+  certificate_no: string;
+  issued_at: string;
+  donation: CertificateDonationInfo;
+  user: CertificateUserInfo;
+}
 
 function generateCertificateNo(userId: number, donationId: number): string {
   const date = new Date();
@@ -13,26 +107,39 @@ function generateCertificateNo(userId: number, donationId: number): string {
   return `DON-${year}${month}${day}-${userId}-${donationId}-${random}`;
 }
 
-router.post('/', authMiddleware, async (req: AuthRequest, res) => {
+const createDonationSchema = {
+  body: {
+    book_title: { type: 'string' as const, required: true, min: 1 },
+    book_author: { type: 'string' as const, required: true, min: 1 },
+    book_condition: { type: 'string' as const, required: true, min: 1 },
+    book_id: { type: 'number' as const },
+    book_cover: { type: 'string' as const },
+    book_category: { type: 'string' as const },
+    quantity: { type: 'number' as const, min: 1, max: 100 },
+    message: { type: 'string' as const }
+  }
+};
+
+router.post('/', authMiddleware, validate(createDonationSchema), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
-  const { book_id, book_title, book_author, book_cover, book_category, book_condition, quantity, message } = req.body;
+  const { book_id, book_title, book_author, book_cover, book_category, book_condition, quantity, message } = req.body as CreateDonationBody;
 
   if (!book_title || !book_author || !book_condition) {
-    return res.status(400).json({ error: '书名、作者和书籍状况是必填项' });
+    return badRequest(res, '书名、作者和书籍状况是必填项');
   }
 
   if (quantity && (quantity < 1 || quantity > 100)) {
-    return res.status(400).json({ error: '捐赠数量必须在1-100之间' });
+    return badRequest(res, '捐赠数量必须在1-100之间');
   }
 
   await db.read();
 
   const newId = Math.max(0, ...db.data.donations.map(d => d.id)) + 1;
 
-  const donation = {
+  const donation: Donation = {
     id: newId,
     user_id: req.user.id,
     book_id: book_id || null,
@@ -43,7 +150,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
     book_condition: book_condition,
     quantity: quantity || 1,
     message: message || '',
-    status: 'approved' as const,
+    status: 'approved',
     donated_at: new Date().toISOString(),
     certificate_issued: true
   };
@@ -51,7 +158,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   db.data.donations.push(donation);
 
   const certId = Math.max(0, ...db.data.donationCertificates.map(c => c.id)) + 1;
-  const certificate = {
+  const certificate: DonationCertificate = {
     id: certId,
     donation_id: newId,
     user_id: req.user.id,
@@ -68,16 +175,18 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
 
   await db.write();
 
-  res.status(201).json({
+  const response = {
     donation,
     certificate,
     points_earned: 20 * (quantity || 1)
-  });
+  };
+
+  created(res, response);
 });
 
-router.get('/mine', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/mine', authMiddleware, validatePagination(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { status, page = 1, limit = 10, sort_by = 'date', sort_order = 'desc' } = req.query;
@@ -106,7 +215,7 @@ router.get('/mine', authMiddleware, async (req: AuthRequest, res) => {
   const start = (pageNum - 1) * limitNum;
   const paginatedDonations = donations.slice(start, start + limitNum);
 
-  const donationsWithCert = paginatedDonations.map(donation => {
+  const donationsWithCert: DonationWithCertificate[] = paginatedDonations.map(donation => {
     const cert = db.data.donationCertificates.find(c => c.donation_id === donation.id);
     return {
       ...donation,
@@ -115,7 +224,7 @@ router.get('/mine', authMiddleware, async (req: AuthRequest, res) => {
     };
   });
 
-  res.json({
+  const response: MyDonationListResponse = {
     donations: donationsWithCert,
     pagination: {
       page: pageNum,
@@ -123,10 +232,12 @@ router.get('/mine', authMiddleware, async (req: AuthRequest, res) => {
       total,
       total_pages: totalPages
     }
-  });
+  };
+
+  success(res, response);
 });
 
-router.get('/', async (req, res) => {
+router.get('/', validatePagination(), async (req, res) => {
   const { user_id, status, page = 1, limit = 10, sort_by = 'date', sort_order = 'desc' } = req.query;
 
   await db.read();
@@ -159,7 +270,7 @@ router.get('/', async (req, res) => {
   const start = (pageNum - 1) * limitNum;
   const paginatedDonations = donations.slice(start, start + limitNum);
 
-  const donationsWithUser = paginatedDonations.map(donation => {
+  const donationsWithUser: DonationWithUser[] = paginatedDonations.map(donation => {
     const user = db.data.users.find(u => u.id === donation.user_id);
     return {
       ...donation,
@@ -168,7 +279,7 @@ router.get('/', async (req, res) => {
     };
   });
 
-  res.json({
+  const response: DonationListResponse = {
     donations: donationsWithUser,
     pagination: {
       page: pageNum,
@@ -176,7 +287,9 @@ router.get('/', async (req, res) => {
       total,
       total_pages: totalPages
     }
-  });
+  };
+
+  success(res, response);
 });
 
 router.get('/ranking', async (req, res) => {
@@ -217,7 +330,7 @@ router.get('/ranking', async (req, res) => {
     }
   }
 
-  const rankings = Array.from(userDonationMap.values())
+  const rankings: RankingItem[] = Array.from(userDonationMap.values())
     .map(item => {
       const user = db.data.users.find(u => u.id === item.user_id);
       return {
@@ -236,17 +349,19 @@ router.get('/ranking', async (req, res) => {
     })
     .slice(0, parseInt(limit as string));
 
-  res.json({
+  const response: RankingResponse = {
     rankings,
     period: periodStr,
     type: type as string,
     total_users: userDonationMap.size
-  });
+  };
+
+  success(res, response);
 });
 
 router.get('/stats', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   await db.read();
@@ -269,17 +384,19 @@ router.get('/stats', authMiddleware, async (req: AuthRequest, res) => {
   const myRankIndex = sortedUsers.findIndex(([userId]) => userId === req.user!.id);
   rank = myRankIndex >= 0 ? myRankIndex + 1 : 0;
 
-  res.json({
+  const response: DonationStatsResponse = {
     total_books: totalBooks,
     total_donations: totalDonations,
     total_certificates: totalCertificates,
     global_total_books: allTotalBooks,
     my_rank: rank,
     total_donors: userBookMap.size
-  });
+  };
+
+  success(res, response);
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateIdParam(), async (req, res) => {
   const { id } = req.params;
 
   await db.read();
@@ -287,22 +404,24 @@ router.get('/:id', async (req, res) => {
   const donation = db.data.donations.find(d => d.id === parseInt(id));
 
   if (!donation) {
-    return res.status(404).json({ error: '捐赠记录不存在' });
+    return notFound(res, '捐赠记录不存在');
   }
 
   const user = db.data.users.find(u => u.id === donation.user_id);
   const certificate = db.data.donationCertificates.find(c => c.donation_id === donation.id);
 
-  res.json({
+  const response: DonationDetailResponse = {
     ...donation,
     username: user?.username,
     user_avatar: user?.avatar,
     certificate_no: certificate?.certificate_no,
     certificate_issued_at: certificate?.issued_at
-  });
+  };
+
+  success(res, response);
 });
 
-router.get('/:id/certificate', async (req, res) => {
+router.get('/:id/certificate', validateIdParam(), async (req, res) => {
   const { id } = req.params;
 
   await db.read();
@@ -310,18 +429,18 @@ router.get('/:id/certificate', async (req, res) => {
   const donation = db.data.donations.find(d => d.id === parseInt(id));
 
   if (!donation) {
-    return res.status(404).json({ error: '捐赠记录不存在' });
+    return notFound(res, '捐赠记录不存在');
   }
 
   const certificate = db.data.donationCertificates.find(c => c.donation_id === donation.id);
 
   if (!certificate) {
-    return res.status(404).json({ error: '捐赠证书未生成' });
+    return notFound(res, '捐赠证书未生成');
   }
 
   const user = db.data.users.find(u => u.id === donation.user_id);
 
-  res.json({
+  const response: CertificateResponse = {
     certificate_no: certificate.certificate_no,
     issued_at: certificate.issued_at,
     donation: {
@@ -338,7 +457,9 @@ router.get('/:id/certificate', async (req, res) => {
       id: user?.id,
       username: user?.username
     }
-  });
+  };
+
+  success(res, response);
 });
 
 export default router;

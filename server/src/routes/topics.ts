@@ -1,17 +1,75 @@
 import { Router } from 'express';
-import db from '../database';
+import db, { Topic, Post, Comment, User, PostLike, CommentLike } from '../database';
 import { authMiddleware, optionalAuthMiddleware, AuthRequest } from '../middleware/auth';
+import { success, created, badRequest, unauthorized, forbidden, notFound } from '../utils/response';
+import { validate, validateIdParam, validatePagination } from '../middleware/validate';
 
 const router = Router();
+
+interface CreatePostRequest {
+  title: string;
+  content: string;
+  topic_ids?: number[];
+  images?: string[];
+}
+
+interface PostWithAuthor extends Post {
+  author_name?: string;
+  author_avatar?: string;
+  author_bio?: string;
+  topics: { id: number; name: string; icon?: string }[];
+  liked: boolean;
+}
+
+interface PostListResponse {
+  posts: PostWithAuthor[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+interface LikeStatusResponse {
+  liked: boolean;
+}
+
+interface LikeResponse {
+  liked: boolean;
+  like_count: number;
+}
+
+interface CreateCommentRequest {
+  content: string;
+  parent_id?: number;
+  reply_to_user_id?: number;
+}
+
+interface CommentWithAuthor extends Comment {
+  author_name?: string;
+  author_avatar?: string;
+  reply_to_username?: string;
+  liked: boolean;
+}
+
+interface CommentTreeNode extends CommentWithAuthor {
+  replies: CommentTreeNode[];
+}
 
 // 获取所有话题
 router.get('/', async (_req, res) => {
   const topics = [...db.data.topics].sort((a, b) => b.post_count - a.post_count);
-  res.json(topics);
+  success(res, topics);
 });
 
 // 获取帖子列表
-router.get('/posts', optionalAuthMiddleware, async (req: AuthRequest, res) => {
+router.get('/posts', optionalAuthMiddleware, validatePagination(), validate({
+  query: {
+    topic_id: { type: 'number' },
+    search: { type: 'string' },
+    sort_by: { type: 'string', enum: ['created_at', 'like_count', 'view_count', 'comment_count'] },
+    sort_order: { type: 'string', enum: ['asc', 'desc'] },
+  },
+}), async (req: AuthRequest, res) => {
   const { topic_id, search, sort_by = 'created_at', sort_order = 'desc', page = 1, limit = 10 } = req.query;
   const userId = req.user?.id;
 
@@ -62,7 +120,7 @@ router.get('/posts', optionalAuthMiddleware, async (req: AuthRequest, res) => {
       .forEach(l => likedPostIds.add(l.post_id));
   }
 
-  const postsWithAuthor = paginatedPosts.map(post => {
+  const postsWithAuthor: PostWithAuthor[] = paginatedPosts.map(post => {
     const author = db.data.users.find(u => u.id === post.author_id);
     const topics = post.topic_ids.map(tid => db.data.topics.find(t => t.id === tid)).filter(Boolean);
     return {
@@ -74,81 +132,89 @@ router.get('/posts', optionalAuthMiddleware, async (req: AuthRequest, res) => {
     };
   });
 
-  res.json({
+  const response: PostListResponse = {
     posts: postsWithAuthor,
     total,
     page: pageNum,
     limit: limitNum,
     total_pages: Math.ceil(total / limitNum)
-  });
+  };
+
+  success(res, response);
 });
 
 // 创建帖子
-router.post('/posts', authMiddleware, async (req: AuthRequest, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
-  const { title, content, topic_ids = [], images = [] } = req.body;
-
-  if (!title || !content) {
-    return res.status(400).json({ error: 'Title and content are required' });
-  }
-
-  if (title.length > 200) {
-    return res.status(400).json({ error: 'Title cannot exceed 200 characters' });
-  }
-
-  await db.read();
-
-  const newId = Math.max(0, ...db.data.posts.map(p => p.id)) + 1;
-  const now = new Date().toISOString();
-
-  const newPost = {
-    id: newId,
-    title,
-    content,
-    author_id: req.user.id,
-    topic_ids: Array.isArray(topic_ids) ? topic_ids : [],
-    images: Array.isArray(images) ? images : [],
-    view_count: 0,
-    like_count: 0,
-    comment_count: 0,
-    created_at: now,
-    updated_at: now
-  };
-
-  db.data.posts.push(newPost);
-
-  for (const tid of newPost.topic_ids) {
-    const topic = db.data.topics.find(t => t.id === tid);
-    if (topic) {
-      topic.post_count += 1;
+router.post(
+  '/posts',
+  authMiddleware,
+  validate({
+    body: {
+      title: { type: 'string', required: true, max: 200 },
+      content: { type: 'string', required: true },
+      topic_ids: { type: 'array' },
+      images: { type: 'array' },
+    },
+  }),
+  async (req: AuthRequest, res) => {
+    if (!req.user) {
+      return unauthorized(res, 'Not authenticated');
     }
+
+    const { title, content, topic_ids = [], images = [] } = req.body as CreatePostRequest;
+
+    await db.read();
+
+    const newId = Math.max(0, ...db.data.posts.map(p => p.id)) + 1;
+    const now = new Date().toISOString();
+
+    const newPost: Post = {
+      id: newId,
+      title,
+      content,
+      author_id: req.user.id,
+      topic_ids: Array.isArray(topic_ids) ? topic_ids : [],
+      images: Array.isArray(images) ? images : [],
+      view_count: 0,
+      like_count: 0,
+      comment_count: 0,
+      created_at: now,
+      updated_at: now
+    };
+
+    db.data.posts.push(newPost);
+
+    for (const tid of newPost.topic_ids) {
+      const topic = db.data.topics.find(t => t.id === tid);
+      if (topic) {
+        topic.post_count += 1;
+      }
+    }
+
+    await db.write();
+
+    const author = db.data.users.find(u => u.id === req.user!.id);
+    const topics = newPost.topic_ids.map(tid => db.data.topics.find(t => t.id === tid)).filter(Boolean);
+
+    const response = {
+      ...newPost,
+      author_name: author?.username,
+      author_avatar: author?.avatar,
+      topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon }))
+    };
+
+    created(res, response);
   }
-
-  await db.write();
-
-  const author = db.data.users.find(u => u.id === req.user!.id);
-  const topics = newPost.topic_ids.map(tid => db.data.topics.find(t => t.id === tid)).filter(Boolean);
-
-  res.status(201).json({
-    ...newPost,
-    author_name: author?.username,
-    author_avatar: author?.avatar,
-    topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon }))
-  });
-});
+);
 
 // 获取帖子详情
-router.get('/posts/:id', async (req, res) => {
+router.get('/posts/:id', validateIdParam(), async (req, res) => {
   const { id } = req.params;
   const postId = parseInt(id);
 
   const post = db.data.posts.find(p => p.id === postId);
 
   if (!post) {
-    return res.status(404).json({ error: 'Post not found' });
+    return notFound(res, 'Post not found');
   }
 
   post.view_count += 1;
@@ -157,19 +223,22 @@ router.get('/posts/:id', async (req, res) => {
   const author = db.data.users.find(u => u.id === post.author_id);
   const topics = post.topic_ids.map(tid => db.data.topics.find(t => t.id === tid)).filter(Boolean);
 
-  res.json({
+  const response: PostWithAuthor = {
     ...post,
     author_name: author?.username,
     author_avatar: author?.avatar,
     author_bio: author?.bio,
-    topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon }))
-  });
+    topics: topics.map(t => ({ id: t!.id, name: t!.name, icon: t!.icon })),
+    liked: false
+  };
+
+  success(res, response);
 });
 
 // 获取帖子点赞状态
-router.get('/posts/:id/like-status', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/posts/:id/like-status', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -179,13 +248,14 @@ router.get('/posts/:id/like-status', authMiddleware, async (req: AuthRequest, re
     l => l.post_id === postId && l.user_id === req.user!.id
   );
 
-  res.json({ liked });
+  const response: LikeStatusResponse = { liked };
+  success(res, response);
 });
 
 // 点赞帖子
-router.post('/posts/:id/like', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/posts/:id/like', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -195,7 +265,7 @@ router.post('/posts/:id/like', authMiddleware, async (req: AuthRequest, res) => 
   const post = db.data.posts.find(p => p.id === postId);
 
   if (!post) {
-    return res.status(404).json({ error: 'Post not found' });
+    return notFound(res, 'Post not found');
   }
 
   const existingLike = db.data.postLikes.find(
@@ -203,7 +273,7 @@ router.post('/posts/:id/like', authMiddleware, async (req: AuthRequest, res) => 
   );
 
   if (existingLike) {
-    return res.status(400).json({ error: 'Already liked' });
+    return badRequest(res, 'Already liked');
   }
 
   const newLikeId = Math.max(0, ...db.data.postLikes.map(l => l.id)) + 1;
@@ -217,13 +287,14 @@ router.post('/posts/:id/like', authMiddleware, async (req: AuthRequest, res) => 
   post.like_count += 1;
   await db.write();
 
-  res.json({ liked: true, like_count: post.like_count });
+  const response: LikeResponse = { liked: true, like_count: post.like_count };
+  success(res, response);
 });
 
 // 取消点赞帖子
-router.post('/posts/:id/unlike', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/posts/:id/unlike', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -233,7 +304,7 @@ router.post('/posts/:id/unlike', authMiddleware, async (req: AuthRequest, res) =
   const post = db.data.posts.find(p => p.id === postId);
 
   if (!post) {
-    return res.status(404).json({ error: 'Post not found' });
+    return notFound(res, 'Post not found');
   }
 
   const likeIndex = db.data.postLikes.findIndex(
@@ -241,18 +312,19 @@ router.post('/posts/:id/unlike', authMiddleware, async (req: AuthRequest, res) =
   );
 
   if (likeIndex === -1) {
-    return res.status(400).json({ error: 'Not liked yet' });
+    return badRequest(res, 'Not liked yet');
   }
 
   db.data.postLikes.splice(likeIndex, 1);
   post.like_count -= 1;
   await db.write();
 
-  res.json({ liked: false, like_count: post.like_count });
+  const response: LikeResponse = { liked: false, like_count: post.like_count };
+  success(res, response);
 });
 
 // 获取帖子评论列表（包含多级回复）
-router.get('/posts/:id/comments', optionalAuthMiddleware, async (req: AuthRequest, res) => {
+router.get('/posts/:id/comments', optionalAuthMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   const { id } = req.params;
   const postId = parseInt(id);
   const userId = req.user?.id;
@@ -268,7 +340,7 @@ router.get('/posts/:id/comments', optionalAuthMiddleware, async (req: AuthReques
       .forEach(l => likedCommentIds.add(l.comment_id));
   }
 
-  const commentsWithAuthor = comments.map(comment => {
+  const commentsWithAuthor: CommentWithAuthor[] = comments.map(comment => {
     const author = db.data.users.find(u => u.id === comment.author_id);
     const replyToUser = comment.reply_to_user_id
       ? db.data.users.find(u => u.id === comment.reply_to_user_id)
@@ -282,7 +354,7 @@ router.get('/posts/:id/comments', optionalAuthMiddleware, async (req: AuthReques
     };
   });
 
-  const buildCommentTree = (parentId: number | null): any[] => {
+  const buildCommentTree = (parentId: number | null): CommentTreeNode[] => {
     return commentsWithAuthor
       .filter(c => c.parent_id === parentId)
       .map(c => ({
@@ -293,73 +365,84 @@ router.get('/posts/:id/comments', optionalAuthMiddleware, async (req: AuthReques
 
   const commentTree = buildCommentTree(null);
 
-  res.json(commentTree);
+  success(res, commentTree);
 });
 
 // 添加评论
-router.post('/posts/:id/comments', authMiddleware, async (req: AuthRequest, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
-  const { id } = req.params;
-  const postId = parseInt(id);
-  const { content, parent_id, reply_to_user_id } = req.body;
-
-  if (!content || !content.trim()) {
-    return res.status(400).json({ error: 'Comment content is required' });
-  }
-
-  await db.read();
-
-  const post = db.data.posts.find(p => p.id === postId);
-  if (!post) {
-    return res.status(404).json({ error: 'Post not found' });
-  }
-
-  if (parent_id) {
-    const parentComment = db.data.comments.find(c => c.id === parent_id);
-    if (!parentComment || parentComment.post_id !== postId) {
-      return res.status(404).json({ error: 'Parent comment not found' });
+router.post(
+  '/posts/:id/comments',
+  authMiddleware,
+  validateIdParam(),
+  validate({
+    body: {
+      content: { type: 'string', required: true, min: 1 },
+      parent_id: { type: 'number' },
+      reply_to_user_id: { type: 'number' },
+    },
+  }),
+  async (req: AuthRequest, res) => {
+    if (!req.user) {
+      return unauthorized(res, 'Not authenticated');
     }
+
+    const { id } = req.params;
+    const postId = parseInt(id);
+    const { content, parent_id, reply_to_user_id } = req.body as CreateCommentRequest;
+
+    await db.read();
+
+    const post = db.data.posts.find(p => p.id === postId);
+    if (!post) {
+      return notFound(res, 'Post not found');
+    }
+
+    if (parent_id) {
+      const parentComment = db.data.comments.find(c => c.id === parent_id);
+      if (!parentComment || parentComment.post_id !== postId) {
+        return notFound(res, 'Parent comment not found');
+      }
+    }
+
+    const newId = Math.max(0, ...db.data.comments.map(c => c.id)) + 1;
+    const now = new Date().toISOString();
+
+    const newComment: Comment = {
+      id: newId,
+      post_id: postId,
+      author_id: req.user.id,
+      content: content.trim(),
+      parent_id: parent_id || null,
+      reply_to_user_id: reply_to_user_id || undefined,
+      like_count: 0,
+      created_at: now
+    };
+
+    db.data.comments.push(newComment);
+    post.comment_count += 1;
+    await db.write();
+
+    const author = db.data.users.find(u => u.id === req.user!.id);
+    const replyToUser = newComment.reply_to_user_id
+      ? db.data.users.find(u => u.id === newComment.reply_to_user_id)
+      : null;
+
+    const response: CommentTreeNode = {
+      ...newComment,
+      author_name: author?.username,
+      author_avatar: author?.avatar,
+      reply_to_username: replyToUser?.username,
+      liked: false,
+      replies: []
+    };
+
+    created(res, response);
   }
-
-  const newId = Math.max(0, ...db.data.comments.map(c => c.id)) + 1;
-  const now = new Date().toISOString();
-
-  const newComment = {
-    id: newId,
-    post_id: postId,
-    author_id: req.user.id,
-    content: content.trim(),
-    parent_id: parent_id || null,
-    reply_to_user_id: reply_to_user_id || undefined,
-    like_count: 0,
-    created_at: now
-  };
-
-  db.data.comments.push(newComment);
-  post.comment_count += 1;
-  await db.write();
-
-  const author = db.data.users.find(u => u.id === req.user!.id);
-  const replyToUser = newComment.reply_to_user_id
-    ? db.data.users.find(u => u.id === newComment.reply_to_user_id)
-    : null;
-
-  res.status(201).json({
-    ...newComment,
-    author_name: author?.username,
-    author_avatar: author?.avatar,
-    reply_to_username: replyToUser?.username,
-    replies: []
-  });
-});
+);
 
 // 点赞评论
-router.post('/comments/:id/like', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/comments/:id/like', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -369,7 +452,7 @@ router.post('/comments/:id/like', authMiddleware, async (req: AuthRequest, res) 
   const comment = db.data.comments.find(c => c.id === commentId);
 
   if (!comment) {
-    return res.status(404).json({ error: 'Comment not found' });
+    return notFound(res, 'Comment not found');
   }
 
   const existingLike = db.data.commentLikes.find(
@@ -377,7 +460,7 @@ router.post('/comments/:id/like', authMiddleware, async (req: AuthRequest, res) 
   );
 
   if (existingLike) {
-    return res.status(400).json({ error: 'Already liked' });
+    return badRequest(res, 'Already liked');
   }
 
   const newLikeId = Math.max(0, ...db.data.commentLikes.map(l => l.id)) + 1;
@@ -391,13 +474,14 @@ router.post('/comments/:id/like', authMiddleware, async (req: AuthRequest, res) 
   comment.like_count += 1;
   await db.write();
 
-  res.json({ liked: true, like_count: comment.like_count });
+  const response: LikeResponse = { liked: true, like_count: comment.like_count };
+  success(res, response);
 });
 
 // 取消点赞评论
-router.post('/comments/:id/unlike', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/comments/:id/unlike', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -407,7 +491,7 @@ router.post('/comments/:id/unlike', authMiddleware, async (req: AuthRequest, res
   const comment = db.data.comments.find(c => c.id === commentId);
 
   if (!comment) {
-    return res.status(404).json({ error: 'Comment not found' });
+    return notFound(res, 'Comment not found');
   }
 
   const likeIndex = db.data.commentLikes.findIndex(
@@ -415,28 +499,29 @@ router.post('/comments/:id/unlike', authMiddleware, async (req: AuthRequest, res
   );
 
   if (likeIndex === -1) {
-    return res.status(400).json({ error: 'Not liked yet' });
+    return badRequest(res, 'Not liked yet');
   }
 
   db.data.commentLikes.splice(likeIndex, 1);
   comment.like_count -= 1;
   await db.write();
 
-  res.json({ liked: false, like_count: comment.like_count });
+  const response: LikeResponse = { liked: false, like_count: comment.like_count };
+  success(res, response);
 });
 
 // 获取话题详情（必须放在最后，因为 :id 会匹配 posts 等路径
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateIdParam(), async (req, res) => {
   const { id } = req.params;
   const topicId = parseInt(id);
 
   const topic = db.data.topics.find(t => t.id === topicId);
 
   if (!topic) {
-    return res.status(404).json({ error: 'Topic not found' });
+    return notFound(res, 'Topic not found');
   }
 
-  res.json(topic);
+  success(res, topic);
 });
 
 export default router;

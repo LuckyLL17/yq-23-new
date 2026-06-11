@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { created, badRequest, unauthorized } from '../utils/response';
 
 const router = Router();
 
@@ -40,32 +41,40 @@ const upload = multer({
   }
 });
 
+interface UploadImageResponse {
+  url: string;
+}
+
+interface UploadImagesResponse {
+  urls: string[];
+}
+
 router.post('/image', authMiddleware, upload.single('image'), (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   if (!req.file) {
-    return res.status(400).json({ error: '请选择要上传的图片' });
+    return badRequest(res, '请选择要上传的图片');
   }
 
   const imageUrl = `/uploads/${req.file.filename}`;
-  res.status(201).json({ url: imageUrl });
+  created<UploadImageResponse>(res, { url: imageUrl }, '图片上传成功');
 });
 
 router.post('/images', authMiddleware, upload.array('images', 9), (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res);
   }
 
   if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
-    return res.status(400).json({ error: '请选择要上传的图片' });
+    return badRequest(res, '请选择要上传的图片');
   }
 
   const imageUrls = (req.files as Express.Multer.File[]).map(
     (file) => `/uploads/${file.filename}`
   );
-  res.status(201).json({ urls: imageUrls });
+  created<UploadImagesResponse>(res, { urls: imageUrls }, '图片上传成功');
 });
 
 export default router;

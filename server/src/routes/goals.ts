@@ -1,6 +1,57 @@
 import { Router } from 'express';
-import db from '../database';
+import db, { ReadingGoal, GoalBook, Book, Achievement } from '../database';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { success, created, badRequest, unauthorized, forbidden, notFound } from '../utils/response';
+import { validate, validateIdParam, validatePagination } from '../middleware/validate';
+
+interface GoalWithProgress extends ReadingGoal {
+  book_count: number;
+  completed_count: number;
+  progress: number;
+}
+
+interface CreateGoalBody {
+  title: string;
+  description?: string;
+  target_books: number;
+  start_date: string;
+  end_date: string;
+}
+
+interface UpdateGoalBody {
+  title?: string;
+  description?: string;
+  target_books?: number;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+}
+
+interface GoalBookWithBook extends GoalBook {
+  book?: Book;
+}
+
+interface GoalDetailResponse extends ReadingGoal {
+  books: (Book & { goal_book_id: number; is_completed: boolean; completed_at?: string; added_at: string })[];
+  book_count: number;
+  completed_count: number;
+  progress: number;
+}
+
+interface AddGoalBookBody {
+  book_id: number;
+}
+
+interface GoalBookResponse {
+  message: string;
+  goal_book: GoalBook;
+  book?: Book;
+  newly_unlocked_achievements?: (Achievement & { unlocked_at: string })[];
+}
+
+interface MessageResponse {
+  message: string;
+}
 
 const router = Router();
 
@@ -60,7 +111,7 @@ const checkAchievements = async (userId: number) => {
 
 router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   await db.read();
@@ -79,26 +130,34 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
       };
     });
 
-  res.json(goals);
+  success(res, goals);
 });
 
-router.post('/', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/', authMiddleware, validate({
+  body: {
+    title: { type: 'string', required: true, min: 1 },
+    description: { type: 'string' },
+    target_books: { type: 'number', required: true, min: 1 },
+    start_date: { type: 'string', required: true },
+    end_date: { type: 'string', required: true }
+  }
+}), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { title, description, target_books, start_date, end_date } = req.body;
 
   if (!title || !title.trim()) {
-    return res.status(400).json({ error: '目标标题不能为空' });
+    return badRequest(res, '目标标题不能为空');
   }
 
   if (!target_books || target_books < 1) {
-    return res.status(400).json({ error: '目标书籍数量不能少于1本' });
+    return badRequest(res, '目标书籍数量不能少于1本');
   }
 
   if (!start_date || !end_date) {
-    return res.status(400).json({ error: '请设置开始和结束日期' });
+    return badRequest(res, '请设置开始和结束日期');
   }
 
   await db.read();
@@ -120,12 +179,12 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   db.data.readingGoals.push(newGoal);
   await db.write();
 
-  res.status(201).json({ ...newGoal, book_count: 0, completed_count: 0, progress: 0 });
+  created(res, { ...newGoal, book_count: 0, completed_count: 0, progress: 0 });
 });
 
-router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/:id', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -137,7 +196,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
   );
 
   if (!goal) {
-    return res.status(404).json({ error: '阅读目标不存在' });
+    return notFound(res, '阅读目标不存在');
   }
 
   const goalBooks = db.data.goalBooks
@@ -158,7 +217,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
 
   const completedCount = books.filter((b: any) => b.is_completed).length;
 
-  res.json({
+  success(res, {
     ...goal,
     books,
     book_count: books.length,
@@ -167,9 +226,18 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res) => {
   });
 });
 
-router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
+router.put('/:id', authMiddleware, validateIdParam(), validate({
+  body: {
+    title: { type: 'string', min: 1 },
+    description: { type: 'string' },
+    target_books: { type: 'number', min: 1 },
+    start_date: { type: 'string' },
+    end_date: { type: 'string' },
+    status: { type: 'string', enum: ['active', 'completed', 'failed'] }
+  }
+}), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -182,7 +250,7 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
   );
 
   if (goalIndex === -1) {
-    return res.status(404).json({ error: '阅读目标不存在' });
+    return notFound(res, '阅读目标不存在');
   }
 
   if (title && title.trim()) {
@@ -209,7 +277,7 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
   const goalBooks = db.data.goalBooks.filter(b => b.goal_id === parseInt(id));
   const completedCount = goalBooks.filter(b => b.is_completed).length;
 
-  res.json({
+  success(res, {
     ...db.data.readingGoals[goalIndex],
     book_count: goalBooks.length,
     completed_count: completedCount,
@@ -219,9 +287,9 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
   });
 });
 
-router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
+router.delete('/:id', authMiddleware, validateIdParam(), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
@@ -233,26 +301,30 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
   );
 
   if (goalIndex === -1) {
-    return res.status(404).json({ error: '阅读目标不存在' });
+    return notFound(res, '阅读目标不存在');
   }
 
   db.data.goalBooks = db.data.goalBooks.filter(b => b.goal_id !== parseInt(id));
   db.data.readingGoals.splice(goalIndex, 1);
   await db.write();
 
-  res.json({ message: '阅读目标已删除' });
+  success(res, { message: '阅读目标已删除' });
 });
 
-router.post('/:id/books', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/books', authMiddleware, validateIdParam(), validate({
+  body: {
+    book_id: { type: 'number', required: true }
+  }
+}), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id } = req.params;
   const { book_id } = req.body;
 
   if (!book_id) {
-    return res.status(400).json({ error: 'book_id is required' });
+    return badRequest(res, 'book_id is required');
   }
 
   await db.read();
@@ -262,19 +334,19 @@ router.post('/:id/books', authMiddleware, async (req: AuthRequest, res) => {
   );
 
   if (!goal) {
-    return res.status(404).json({ error: '阅读目标不存在' });
+    return notFound(res, '阅读目标不存在');
   }
 
   const book = db.data.books.find(b => b.id === book_id);
   if (!book) {
-    return res.status(404).json({ error: '书籍不存在' });
+    return notFound(res, '书籍不存在');
   }
 
   const existingItem = db.data.goalBooks.find(
     b => b.goal_id === parseInt(id) && b.book_id === book_id
   );
   if (existingItem) {
-    return res.status(400).json({ error: '该书已在阅读目标中' });
+    return badRequest(res, '该书已在阅读目标中');
   }
 
   const newId = Math.max(0, ...db.data.goalBooks.map(b => b.id)) + 1;
@@ -290,12 +362,12 @@ router.post('/:id/books', authMiddleware, async (req: AuthRequest, res) => {
   db.data.goalBooks.push(newGoalBook);
   await db.write();
 
-  res.status(201).json({ ...newGoalBook, book });
+  created(res, { ...newGoalBook, book });
 });
 
-router.delete('/:id/books/:bookId', authMiddleware, async (req: AuthRequest, res) => {
+router.delete('/:id/books/:bookId', authMiddleware, validateIdParam('id'), validateIdParam('bookId'), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id, bookId } = req.params;
@@ -307,7 +379,7 @@ router.delete('/:id/books/:bookId', authMiddleware, async (req: AuthRequest, res
   );
 
   if (!goal) {
-    return res.status(404).json({ error: '阅读目标不存在' });
+    return notFound(res, '阅读目标不存在');
   }
 
   const itemIndex = db.data.goalBooks.findIndex(
@@ -315,18 +387,18 @@ router.delete('/:id/books/:bookId', authMiddleware, async (req: AuthRequest, res
   );
 
   if (itemIndex === -1) {
-    return res.status(404).json({ error: '该书不在阅读目标中' });
+    return notFound(res, '该书不在阅读目标中');
   }
 
   db.data.goalBooks.splice(itemIndex, 1);
   await db.write();
 
-  res.json({ message: '已从阅读目标中移除' });
+  success(res, { message: '已从阅读目标中移除' });
 });
 
-router.post('/:id/books/:bookId/complete', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/books/:bookId/complete', authMiddleware, validateIdParam('id'), validateIdParam('bookId'), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id, bookId } = req.params;
@@ -338,7 +410,7 @@ router.post('/:id/books/:bookId/complete', authMiddleware, async (req: AuthReque
   );
 
   if (!goal) {
-    return res.status(404).json({ error: '阅读目标不存在' });
+    return notFound(res, '阅读目标不存在');
   }
 
   const goalBook = db.data.goalBooks.find(
@@ -346,11 +418,11 @@ router.post('/:id/books/:bookId/complete', authMiddleware, async (req: AuthReque
   );
 
   if (!goalBook) {
-    return res.status(404).json({ error: '该书不在阅读目标中' });
+    return notFound(res, '该书不在阅读目标中');
   }
 
   if (goalBook.is_completed) {
-    return res.status(400).json({ error: '该书已经标记为已读' });
+    return badRequest(res, '该书已经标记为已读');
   }
 
   goalBook.is_completed = true;
@@ -369,7 +441,7 @@ router.post('/:id/books/:bookId/complete', authMiddleware, async (req: AuthReque
 
   const book = db.data.books.find(b => b.id === parseInt(bookId));
 
-  res.json({
+  success(res, {
     message: '已标记为已读',
     goal_book: goalBook,
     book,
@@ -377,9 +449,9 @@ router.post('/:id/books/:bookId/complete', authMiddleware, async (req: AuthReque
   });
 });
 
-router.post('/:id/books/:bookId/uncomplete', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/books/:bookId/uncomplete', authMiddleware, validateIdParam('id'), validateIdParam('bookId'), async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const { id, bookId } = req.params;
@@ -391,7 +463,7 @@ router.post('/:id/books/:bookId/uncomplete', authMiddleware, async (req: AuthReq
   );
 
   if (!goal) {
-    return res.status(404).json({ error: '阅读目标不存在' });
+    return notFound(res, '阅读目标不存在');
   }
 
   const goalBook = db.data.goalBooks.find(
@@ -399,11 +471,11 @@ router.post('/:id/books/:bookId/uncomplete', authMiddleware, async (req: AuthReq
   );
 
   if (!goalBook) {
-    return res.status(404).json({ error: '该书不在阅读目标中' });
+    return notFound(res, '该书不在阅读目标中');
   }
 
   if (!goalBook.is_completed) {
-    return res.status(400).json({ error: '该书尚未标记为已读' });
+    return badRequest(res, '该书尚未标记为已读');
   }
 
   goalBook.is_completed = false;
@@ -420,7 +492,7 @@ router.post('/:id/books/:bookId/uncomplete', authMiddleware, async (req: AuthReq
 
   const book = db.data.books.find(b => b.id === parseInt(bookId));
 
-  res.json({
+  success(res, {
     message: '已取消已读标记',
     goal_book: goalBook,
     book,

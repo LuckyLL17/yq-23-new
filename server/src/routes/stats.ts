@@ -1,12 +1,73 @@
 import { Router } from 'express';
-import db from '../database';
+import db, { DriftRecord, GoalBook, ReadingGoal, Book } from '../database';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { success, unauthorized } from '../utils/response';
+import { validate, validateIdParam, validatePagination } from '../middleware/validate';
 
 const router = Router();
 
+interface OverviewStatsResponse {
+  total_books: number;
+  total_pages: number;
+  total_hours: number;
+  categories_count: number;
+  top_category: string;
+}
+
+interface MonthlyStatsItem {
+  month: string;
+  count: number;
+  hours: number;
+}
+
+interface CategoryStatsItem {
+  name: string;
+  value: number;
+  percentage: number;
+}
+
+interface ReadingTrendItem {
+  date: string;
+  minutes: number;
+  books: number;
+}
+
+interface ExportStatsUser {
+  username?: string;
+  email?: string;
+}
+
+interface ExportStatsSummary {
+  total_books: number;
+  total_categories: number;
+  total_points: number;
+  export_date: string;
+}
+
+interface ReadingHistoryItem {
+  book_title: string;
+  book_author: string;
+  category: string;
+  read_date: string | null | undefined;
+  rating: number | null;
+  notes: string | null;
+}
+
+interface CategoryCount {
+  name: string;
+  count: number;
+}
+
+interface ExportStatsResponse {
+  user: ExportStatsUser;
+  summary: ExportStatsSummary;
+  categories: CategoryCount[];
+  reading_history: ReadingHistoryItem[];
+}
+
 router.get('/overview', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   await db.read();
@@ -47,25 +108,27 @@ router.get('/overview', authMiddleware, async (req: AuthRequest, res) => {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  res.json({
+  const response: OverviewStatsResponse = {
     total_books: totalBooks,
     total_pages: totalPages,
     total_hours: totalHours,
     categories_count: categories.length,
     top_category: categories[0]?.name || '暂无',
-  });
+  };
+
+  success(res, response);
 });
 
 router.get('/monthly', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   await db.read();
 
   const userId = req.user.id;
   const months = 12;
-  const monthlyData: { month: string; count: number; hours: number }[] = [];
+  const monthlyData: MonthlyStatsItem[] = [];
 
   const now = new Date();
   for (let i = months - 1; i >= 0; i--) {
@@ -102,12 +165,12 @@ router.get('/monthly', authMiddleware, async (req: AuthRequest, res) => {
     }
   });
 
-  res.json(monthlyData);
+  success(res, monthlyData);
 });
 
 router.get('/categories', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   await db.read();
@@ -150,19 +213,19 @@ router.get('/categories', authMiddleware, async (req: AuthRequest, res) => {
     }))
     .sort((a, b) => b.value - a.value);
 
-  res.json(categories);
+  success(res, categories);
 });
 
 router.get('/reading-trend', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   await db.read();
 
   const userId = req.user.id;
   const days = 30;
-  const dailyData: { date: string; minutes: number; books: number }[] = [];
+  const dailyData: ReadingTrendItem[] = [];
 
   const now = new Date();
   for (let i = days - 1; i >= 0; i--) {
@@ -199,12 +262,12 @@ router.get('/reading-trend', authMiddleware, async (req: AuthRequest, res) => {
     }
   });
 
-  res.json(dailyData);
+  success(res, dailyData);
 });
 
 router.get('/export', authMiddleware, async (req: AuthRequest, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Not authenticated' });
+    return unauthorized(res, 'Not authenticated');
   }
 
   const format = (req.query.format as string) || 'json';
@@ -254,7 +317,7 @@ router.get('/export', authMiddleware, async (req: AuthRequest, res) => {
     categoriesMap.set(record.category, (categoriesMap.get(record.category) || 0) + 1);
   });
 
-  const stats = {
+  const stats: ExportStatsResponse = {
     user: {
       username: user?.username,
       email: user?.email,
