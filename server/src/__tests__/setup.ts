@@ -16,10 +16,10 @@ const hashedAdminPassword = bcrypt.hashSync('admin123', 10);
 const hashedUserPassword = bcrypt.hashSync('password123', 10);
 
 const seedUsers: User[] = [
-  { id: 1, username: 'admin', email: 'admin@example.com', password: hashedAdminPassword, points: 999, role: 'admin', status: 'active', bio: '系统管理员', created_at: now },
-  { id: 2, username: 'booklover', email: 'booklover@example.com', password: hashedUserPassword, points: 150, role: 'user', status: 'active', bio: '热爱阅读，喜欢分享好书', created_at: now },
-  { id: 3, username: 'reader123', email: 'reader@example.com', password: hashedUserPassword, points: 80, role: 'user', status: 'active', bio: '书虫一枚，各种类型都读', created_at: now },
-  { id: 4, username: 'bibliophile', email: 'biblio@example.com', password: hashedUserPassword, points: 200, role: 'user', status: 'active', bio: '藏书爱好者，愿意与大家分享', created_at: now }
+  { id: 1, username: 'admin', email: 'admin@example.com', password: hashedAdminPassword, points: 999, role: 'admin', status: 'active', avatar: 'https://picsum.photos/seed/admin/100/100', bio: '系统管理员', created_at: now },
+  { id: 2, username: 'booklover', email: 'booklover@example.com', password: hashedUserPassword, points: 150, role: 'user', status: 'active', avatar: 'https://picsum.photos/seed/booklover/100/100', bio: '热爱阅读，喜欢分享好书', created_at: now },
+  { id: 3, username: 'reader123', email: 'reader@example.com', password: hashedUserPassword, points: 80, role: 'user', status: 'active', avatar: 'https://picsum.photos/seed/reader123/100/100', bio: '书虫一枚，各种类型都读', created_at: now },
+  { id: 4, username: 'bibliophile', email: 'biblio@example.com', password: hashedUserPassword, points: 200, role: 'user', status: 'active', avatar: 'https://picsum.photos/seed/biblio/100/100', bio: '藏书爱好者，愿意与大家分享', created_at: now }
 ];
 
 const seedBooks: Book[] = [
